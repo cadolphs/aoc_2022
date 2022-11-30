@@ -9,16 +9,16 @@ fn main() {
 
     let year = 2022;
     
-    if let Ok(input) = get_aoc_input(year, 1, session_cookie) {
+    if let Ok(input) = get_aoc_input(year, 1, &session_cookie) {
         run_day_01(input);
     }
 }
 
-fn get_aoc_input(year: i32, day: u32, session_cookie: String) -> Result<String, Box<dyn Error>> {
+fn get_aoc_input(year: i32, day: u32, session_cookie: &str) -> Result<String, Box<dyn Error>> {
     let mut aoc = Aoc::new()
         .year(Some(year))
         .day(Some(day))
-        .cookie(&session_cookie)
+        .cookie(session_cookie)
         .init()
         .unwrap();
     let input = aoc.get_input(false)?;
