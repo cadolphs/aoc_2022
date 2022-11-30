@@ -1,3 +1,3 @@
-pub fn run_day_01() {
-    println!("Hello World. I am the first day.");
+pub fn run_day_01(input: String) {
+    println!("Running day one with input {}", input);
 }
