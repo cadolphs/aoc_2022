@@ -11,3 +11,5 @@ Rust.
 I don't like to copy-paste the input files. Instead, I'm using a crate (aocf) that'll get me access to my personal 
 version of the puzzle input. It's based on my session cookie which I store as an environment variable in gitpod.
 
+## Go-time. Day 1.
+See the particular readup for day 1:
