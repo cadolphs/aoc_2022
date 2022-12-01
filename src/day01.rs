@@ -32,7 +32,7 @@ fn get_top_three_calories<I: Iterator<Item=i32>>(sums: I) -> (i32, i32, i32) {
 
 #[cfg(test)]
 mod tests {
-    use super::BinaryHeap;
+    use super::*;
 
     use crate::day01::handle_block;
 

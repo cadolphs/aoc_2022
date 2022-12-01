@@ -19,7 +19,7 @@ fn get_aoc_input(year: i32, day: u32, session_cookie: &Option<String>) -> Result
         .year(Some(year))
         .day(Some(day));
     if let Some(session_str) = session_cookie {
-        aoc = aoc.cookie(session_str)
+        aoc = aoc.cookie(session_str);
     }
 
     aoc = aoc
