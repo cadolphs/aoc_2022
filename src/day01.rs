@@ -1,5 +1,3 @@
-use std::collections::BinaryHeap;
-
 pub fn run_day_01(input: String) {
     let blocks = input.trim().split("\n\n");
     let sums = blocks.map(handle_block);
@@ -17,8 +15,19 @@ fn handle_block(block: &str) -> i32 {
 }
 
 fn get_top_three_calories<I: Iterator<Item=i32>>(sums: I) -> (i32, i32, i32) {
-    let mut heap: BinaryHeap<i32> = sums.collect();
-    (heap.pop().unwrap(), heap.pop().unwrap(), heap.pop().unwrap())
+    sums.fold((0, 0, 0), |(a, b, c), x| 
+            {
+                if x > a {
+                    (x, a, b)
+                } else if x > b {
+                    (a, x, b)
+                } else if x > c {
+                    (a, b, x)
+                }
+                else {
+                    (a, b, c)
+                }
+            })
 }
 
 #[cfg(test)]
@@ -48,9 +57,25 @@ mod tests {
         let blocks = input.split("\n\n");
         let sum_iterator = blocks.map(handle_block);
 
-        let mut heap: BinaryHeap<_> = sum_iterator.collect();
-        // Top 2 items are 13 (6 + 7) and 9 (4 + 5).
-        assert_eq!(heap.pop(), Some(13));
-        assert_eq!(heap.pop(), Some(9));
+        // let mut heap: BinaryHeap<_> = sum_iterator.collect();
+        // // Top 2 items are 13 (6 + 7) and 9 (4 + 5).
+        // assert_eq!(heap.pop(), Some(13));
+        // assert_eq!(heap.pop(), Some(9));
+
+        // Try it with fold
+        let top_three_sums = sum_iterator.fold((0, 0, 0), |(a, b, c), x| 
+            {
+                if x > a {
+                    (x, a, b)
+                } else if x > b {
+                    (a, x, b)
+                } else if x > c {
+                    (a, b, x)
+                }
+                else {
+                    (a, b, c)
+                }
+            });
+        assert_eq!((13, 9, 5), top_three_sums);
     }
 }

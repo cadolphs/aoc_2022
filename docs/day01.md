@@ -14,6 +14,19 @@ Next up we have part 2 of day 1 where now instead of just the max, we need the t
 it into a vector and sort it. But that seems a waste. Instead, if you want something where it's algorithmically efficient 
 to iterate over the top items, you'll want a heap data structure. In essence this would be a _priority queue_. 
 
+Well. We can actually do even better than using `BinaryHeap`. Given that we know ahead of time that we only want the top three, we 
+don't need to put _all_ the items in a heap. Instead, we just do a single pass over the data and keep track of the top three. 
+That could either be done via a for-loop, or, much cooler, via the `fold` method of iterator. The `fold` method takes in an 
+initial value and a function. It then iterates over the items in the iterator and updates the _accumulator_ with the result of 
+calling the function on the current value of the accumulator and the next item. Maybe that sounds complicated but if you check out the 
+example it's not that difficult: Here we initialize the accumulator with `(0, 0, 0)`. To process the next item, we just check where 
+the next item fits within the current top three.
+
+Quick thought: If we had to deal with a _very large_ dataset _and_ we'd be asking for _a lot of top items_ (say, the top 100,000 of 
+a data set with 100,000,000,000) items or so, we could combine the ideas. The accumulator would not be a simple tuple but instead a 
+double-ended priority queue. To update the accumulator with the next item, we check if the next item is larger than the current minimum. If it is, 
+we pop the minimum and push the new item. Otherwise we do nothing.
+
 ## Cool Rust features here
 ### Iterators
 Iterators and their chaining is very powerful and idiomatic. In "the old days" you'd write a for-loop for these sort of things. Now you 
