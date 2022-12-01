@@ -5,7 +5,7 @@ use std::env;
 use std::error::Error;
 
 fn main() {
-    let session_cookie = env::var("aocd_session_id").unwrap();
+    let session_cookie: Option<String> = env::var("aocd_session_id").ok();
 
     let year = 2022;
     
@@ -14,11 +14,15 @@ fn main() {
     }
 }
 
-fn get_aoc_input(year: i32, day: u32, session_cookie: &str) -> Result<String, Box<dyn Error>> {
+fn get_aoc_input(year: i32, day: u32, session_cookie: &Option<String>) -> Result<String, Box<dyn Error>> {
     let mut aoc = Aoc::new()
         .year(Some(year))
-        .day(Some(day))
-        .cookie(session_cookie)
+        .day(Some(day));
+    if let Some(session_str) = session_cookie {
+        aoc = aoc.cookie(session_str)
+    }
+
+    aoc = aoc
         .init()
         .unwrap();
     let input = aoc.get_input(false)?;
