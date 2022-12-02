@@ -4,18 +4,25 @@ use simple_error::SimpleError;
 pub fn run_day_02(input: String) {
     let rounds = parse_input(input.clone()).unwrap();
 
-    let total_score = score_game(rounds.iter());
+    let total_score = score_game(rounds.into_iter());
     println!("Total score following initial startegy is: {}", total_score);
 
     let part2_input = parse_part2_input(input).unwrap();
-    let part2_rounds: Vec<(HandShape, HandShape)> = compute_required_hand_shapes(part2_input);
+    let part2_rounds = compute_required_hand_shapes(part2_input);
 
-    let total_score_round2 = score_game(part2_rounds.iter());
-    println!("With the renewed strategy, the total score is: {}", total_score_round2);
+    let total_score_round2 = score_game(part2_rounds);
+    println!(
+        "With the renewed strategy, the total score is: {}",
+        total_score_round2
+    );
 }
 
-fn compute_required_hand_shapes(part2_input: Vec<(HandShape, GameOutcome)>) -> Vec<(HandShape, HandShape)> {
-    part2_input.into_iter().map(|(shape, outcome)| (shape, hand_shape_for_outcome(&shape, &outcome))).collect()
+fn compute_required_hand_shapes(
+    part2_input: Vec<(HandShape, GameOutcome)>,
+) -> impl Iterator<Item = (HandShape, HandShape)> {
+    part2_input
+        .into_iter()
+        .map(|(shape, outcome)| (shape, hand_shape_for_outcome(&shape, &outcome)))
 }
 
 fn parse_input(input: String) -> Result<Vec<(HandShape, HandShape)>, Box<dyn Error>> {
@@ -44,20 +51,20 @@ fn parse_part2_line(input: &str) -> Result<(HandShape, GameOutcome), Box<dyn Err
     Ok((codes.0.parse()?, codes.1.parse()?))
 }
 
-fn score_game<'a>(rounds: impl Iterator<Item = &'a (HandShape, HandShape)>) -> u64 {
+fn score_game(rounds: impl Iterator<Item = (HandShape, HandShape)>) -> u64 {
     rounds
         .map(|(opponent, own)| score_round(&own, &own.battle(&opponent)))
         .sum()
 }
 
 fn hand_shape_for_outcome(opponent_shape: &HandShape, intended_outcome: &GameOutcome) -> HandShape {
-    use HandShape::*;
     use GameOutcome::*;
+    use HandShape::*;
     match (opponent_shape, intended_outcome) {
         (any_shape, Draw) => *any_shape,
         (Rock, Win) | (Scissors, Loss) => Paper,
         (Paper, Win) | (Rock, Loss) => Scissors,
-        _ => Rock
+        _ => Rock,
     }
 }
 
