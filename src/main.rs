@@ -1,7 +1,11 @@
+#[macro_use]
+extern crate simple_error;
+
 pub mod day01;
 pub mod day02;
 use aocf::Aoc;
 use day01::run_day_01;
+use day02::run_day_02;
 use std::env;
 use std::error::Error;
 
@@ -12,7 +16,16 @@ fn main() {
     
     if let Ok(input) = get_aoc_input(year, 1, &session_cookie) {
         run_day_01(input);
+        print_separation();
     }
+    
+    if let Ok(input) = get_aoc_input(year, 2, &session_cookie) {
+        run_day_02(input);
+    }
+}
+
+fn print_separation() {
+    print!("\n\n\n");
 }
 
 fn get_aoc_input(year: i32, day: u32, session_cookie: &Option<String>) -> Result<String, Box<dyn Error>> {

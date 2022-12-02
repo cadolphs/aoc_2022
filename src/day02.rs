@@ -1,7 +1,27 @@
+use itertools::Itertools;
 
-
+use simple_error::SimpleError;
 pub fn run_day_02(input: String) {
+    let rounds = parse_input(input).unwrap();
 
+    let total_score = score_game(&rounds);
+    println!("Total score following initial startegy is: {}", total_score);
+}
+
+fn parse_input(input: String) -> Result<Vec<(HandShape, HandShape)>, Box<dyn Error>> {
+    input.lines().map(parse_line).collect()
+}
+
+
+pub fn parse_line(input: &str) -> Result<(HandShape, HandShape), Box<dyn Error>> {
+    let res_vec: Result<Vec<HandShape>, _> = input.split(' ')
+    .map(|entry| entry.parse()).collect();
+    res_vec?.into_iter().collect_tuple().ok_or(Box::new(SimpleError::new("Wrong number of hand shapes on that line")))
+
+}
+
+fn score_game<'a>(rounds: impl IntoIterator<Item=&'a(HandShape, HandShape)>) -> u64 {
+    rounds.into_iter().map(|(opponent, own)| score_round(&own, &own.battle(&opponent))).sum()
 }
 
 fn score_round(hand_shape: &HandShape, outcome: &GameOutcome) -> u64 {
@@ -118,5 +138,12 @@ mod tests {
         let outcome = GameOutcome::Win;
 
         assert_eq!(score_round(&hand_shape, &outcome), 9);
+    }
+
+    #[test]
+    fn hacking_around_with_parsing_a_tuple() {
+        let two_shapes: (HandShape, HandShape) = parse_line("A X").unwrap();
+
+        assert_eq!(two_shapes.0, HandShape::Rock)
     }
 }
