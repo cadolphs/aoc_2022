@@ -21,3 +21,11 @@ particular rules of the game.
 
 Now with scoring implemented, we need to parse the whole list. It's nice that we have a `FromStr` for the hand shapes. Let's see if we 
 can use that to directly convert tuples...
+
+Phew. Lots of wrangling the iterators, parsing, and collecting. Getting better at it :)
+
+Next. For part 2. Aha. So what's changing here is that the second column doesn't refer to hand shapes but to game outcomes. Easy enough 
+to implement `FromStr` for the game outcome.
+
+After that, the parsing itself works the same way. And then we just need a function that turns the intended outcomes of the game into the 
+hand shape we should be throwing (because we need to know that for the scoring). Pattern matching does the trick here.
