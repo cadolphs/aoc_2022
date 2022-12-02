@@ -14,3 +14,7 @@ a hand shape. Let's go!
 
 With the enum ready to go, we can now also think about the game. A game outcome is another good candidate for an enum. 
 Then we can add a function that takes _your_ HandShape and battles it against an opponent, and returns an outcome.
+
+With that done, there'd now be the _scoring_ function. We _could_ implement those as methods of the handshape and game outcome 
+structs but conceptually I don't like it. At least not for the hand shape. The scoring is something that depends on the 
+particular rules of the game.

@@ -4,6 +4,29 @@ pub fn run_day_02(input: String) {
 
 }
 
+fn score_round(hand_shape: &HandShape, outcome: &GameOutcome) -> u64 {
+    score_shape(hand_shape) + score_outcome(outcome)
+}
+
+fn score_shape(hand_shape: &HandShape) -> u64 {
+    use HandShape::*;
+    match hand_shape {
+        Rock => 1,
+        Paper => 2,
+        Scissors => 3
+    }
+}
+
+fn score_outcome(outcome: &GameOutcome) -> u64 {
+    use GameOutcome::*;
+    match outcome {
+        Win => 6,
+        Draw => 3,
+        Loss => 0
+    }
+}
+
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum HandShape {
     Rock,
@@ -87,5 +110,13 @@ mod tests {
         
         assert_eq!(hand_shape.battle(&HandShape::Scissors), GameOutcome::Win);
         assert_eq!(hand_shape.battle(&HandShape::Rock), GameOutcome::Draw);
+    }
+
+    #[test]
+    fn check_a_few_scores() {
+        let hand_shape = HandShape::Scissors;
+        let outcome = GameOutcome::Win;
+
+        assert_eq!(score_round(&hand_shape, &outcome), 9);
     }
 }
