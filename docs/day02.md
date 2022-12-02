@@ -11,3 +11,6 @@ _implicitly_ has it mean "Rock", this will be a very burdensome change.
 
 So, Rust enums seem great for representing hand shapes. Then we just need to provide a single function that turns a character into 
 a hand shape. Let's go!
+
+With the enum ready to go, we can now also think about the game. A game outcome is another good candidate for an enum. 
+Then we can add a function that takes _your_ HandShape and battles it against an opponent, and returns an outcome.

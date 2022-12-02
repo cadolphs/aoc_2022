@@ -4,7 +4,7 @@ pub fn run_day_02(input: String) {
 
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum HandShape {
     Rock,
     Paper,
@@ -43,12 +43,29 @@ impl FromStr for HandShape {
             'C' => Ok(Scissors),
             'X' => Ok(Rock),
             'Y' => Ok(Paper),
-            'Z' => Ok(Scissors)
+            'Z' => Ok(Scissors),
             _ => Err(HandShapeParseError { msg: s.to_string() })
         }
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub enum GameOutcome {
+    Win,
+    Draw,
+    Loss
+}
+
+impl HandShape {
+    fn battle(&self, opponent_shape: &HandShape) -> GameOutcome {
+        use HandShape::*;
+        match (*self, *opponent_shape) {
+            (Rock, Scissors) | (Scissors, Paper) | (Paper, Rock) => GameOutcome::Win,
+            (Rock, Rock) | (Scissors, Scissors) | (Paper, Paper) => GameOutcome::Draw,
+            _ => GameOutcome::Loss
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -62,5 +79,13 @@ mod tests {
         
         let hand_shape: Result<HandShape, _> = "foo".parse();
         assert!(hand_shape.is_err(), "HandShape is not an error");
+    }
+
+    #[test]
+    fn check_some_game_outcomes() {
+        let hand_shape = HandShape::Rock;
+        
+        assert_eq!(hand_shape.battle(&HandShape::Scissors), GameOutcome::Win);
+        assert_eq!(hand_shape.battle(&HandShape::Rock), GameOutcome::Draw);
     }
 }
