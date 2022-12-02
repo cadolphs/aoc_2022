@@ -1,4 +1,5 @@
 pub mod day01;
+pub mod day02;
 use aocf::Aoc;
 use day01::run_day_01;
 use std::env;
