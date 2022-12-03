@@ -3,6 +3,8 @@ extern crate simple_error;
 
 pub mod day01;
 pub mod day02;
+pub mod day03;
+
 use aocf::Aoc;
 use day01::run_day_01;
 use day02::run_day_02;
