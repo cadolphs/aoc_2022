@@ -3,10 +3,13 @@ use std::collections::HashSet;
 use simple_error::SimpleError;
 
 pub fn run_day_03(input: String) {
-    todo!()
+    let total_score: u64 = input.lines().map(|line| find_item_that_appears_in_both(line).unwrap())
+    .map(|item| score_item(item).unwrap()).sum();
+
+    println!("Total score of the mixed-up items is {}", total_score);
 }
 
-fn find_item_that_appears_in_both(input: String) -> Result<char, SimpleError> {
+fn find_item_that_appears_in_both(input: &str) -> Result<char, SimpleError> {
     if input.len() % 2 != 0 {
         return Err(SimpleError::new("Uneven length for input string!"));
     }
@@ -50,14 +53,14 @@ mod tests {
 
     #[test]
     fn finds_items_that_apper_in_both() {
-        let input = "aa".to_string();
+        let input = "aa";
 
         assert_eq!(find_item_that_appears_in_both(input), Ok('a'));
 
-        let input: String = "aaabccbd".to_string();
+        let input = "aaabccbd";
         assert_eq!(find_item_that_appears_in_both(input), Ok('b'));
 
-        let input = "xyz".to_string();
+        let input = "xyz";
         assert!(find_item_that_appears_in_both(input).is_err());
     }
 

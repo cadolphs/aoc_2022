@@ -8,6 +8,7 @@ pub mod day03;
 use aocf::Aoc;
 use day01::run_day_01;
 use day02::run_day_02;
+use day03::run_day_03;
 use std::env;
 use std::error::Error;
 
@@ -23,6 +24,10 @@ fn main() {
     
     if let Ok(input) = get_aoc_input(year, 2, &session_cookie) {
         run_day_02(input);
+    }
+
+    if let Ok(input) = get_aoc_input(year, 3, &session_cookie) {
+        run_day_03(input);
     }
 }
 
