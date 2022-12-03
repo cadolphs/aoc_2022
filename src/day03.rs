@@ -1,12 +1,25 @@
+use itertools::Itertools;
+use simple_error::SimpleError;
 use std::collections::HashSet;
 
-use simple_error::SimpleError;
-
 pub fn run_day_03(input: String) {
-    let total_score: u64 = input.lines().map(|line| find_item_that_appears_in_both(line).unwrap())
-    .map(|item| score_item(item).unwrap()).sum();
+    let total_score: u64 = input
+        .lines()
+        .map(|line| find_item_that_appears_in_both(line).unwrap())
+        .map(|item| score_item(item).unwrap())
+        .sum();
 
     println!("Total score of the mixed-up items is {}", total_score);
+
+    let total_score_2: u64 = input
+        .lines()
+        .tuples()
+        .map(|(a, b, c)| [a, b, c])
+        .map(|rucksacks| find_shared_item_in_three_group(&rucksacks).unwrap())
+        .map(|item| score_item(item).unwrap())
+        .sum();
+
+    println!("Total score of the bages is {}", total_score_2);
 }
 
 fn find_item_that_appears_in_both(input: &str) -> Result<char, SimpleError> {
@@ -30,7 +43,23 @@ fn find_item_that_appears_in_both(input: &str) -> Result<char, SimpleError> {
     }
 }
 
-fn score_item(item: char) -> Result<u64, SimpleError> { 
+fn find_shared_item_in_three_group(rucksacks: &[&str; 3]) -> Result<char, SimpleError> {
+    let item_sets: [HashSet<char>; 3] = rucksacks.map(|rucksack| rucksack.chars().collect());
+    let intersection = item_sets
+        .into_iter()
+        .reduce(|acc, it| acc.intersection(&it).cloned().collect())
+        .unwrap();
+
+    if intersection.len() != 1 {
+        Err(SimpleError::new(
+            "Three-group has intersection with not exactly one element",
+        ))
+    } else {
+        Ok(intersection.into_iter().next().unwrap())
+    }
+}
+
+fn score_item(item: char) -> Result<u64, SimpleError> {
     if !item.is_alphabetic() {
         return Err(SimpleError::new("Not an alphabetic character"));
     }
@@ -38,11 +67,9 @@ fn score_item(item: char) -> Result<u64, SimpleError> {
     let ascii = item as u64;
     if ascii >= ('a' as u64) && ascii <= ('z' as u64) {
         Ok(ascii - ('a' as u64) + 1)
-    }
-    else if ascii >= ('A' as u64) && ascii <= ('Z' as u64) {
+    } else if ascii >= ('A' as u64) && ascii <= ('Z' as u64) {
         Ok(ascii - ('A' as u64) + 27)
-    }
-    else {
+    } else {
         Err(SimpleError::new("Invalid character encountered"))
     }
 }
@@ -70,5 +97,11 @@ mod tests {
         for (input, expected) in input_output {
             assert_eq!(Ok(expected), score_item(input))
         }
+    }
+
+    #[test]
+    fn test_the_three_finder() {
+        let input: [&str; 3] = ["abc", "acd", "adf"];
+        assert_eq!(find_shared_item_in_three_group(&input), Ok('a'));
     }
 }

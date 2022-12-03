@@ -24,10 +24,12 @@ fn main() {
     
     if let Ok(input) = get_aoc_input(year, 2, &session_cookie) {
         run_day_02(input);
+        print_separation()
     }
 
     if let Ok(input) = get_aoc_input(year, 3, &session_cookie) {
         run_day_03(input);
+        print_separation()
     }
 }
 
