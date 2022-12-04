@@ -4,11 +4,14 @@ extern crate simple_error;
 pub mod day01;
 pub mod day02;
 pub mod day03;
+pub mod day04;
 
 use aocf::Aoc;
 use day01::run_day_01;
 use day02::run_day_02;
 use day03::run_day_03;
+use day04::run_day_04;
+
 use std::env;
 use std::error::Error;
 
@@ -30,6 +33,11 @@ fn main() {
     if let Ok(input) = get_aoc_input(year, 3, &session_cookie) {
         run_day_03(input);
         print_separation()
+    }
+
+    if let Ok(input) = get_aoc_input(year, 4, &session_cookie) {
+        run_day_04(input);
+        print_separation();
     }
 }
 
