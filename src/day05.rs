@@ -19,6 +19,17 @@ pub fn run_day_05(input: String) {
     let top_items: String = crate_stacks.top_items().collect();
 
     println!("After all this moving, the top items on the crates are {}", top_items);
+
+    let mut crate_stacks = parse_crate_block(crate_block);
+
+    for move_line in move_block.lines() {
+        let m = parse_move_line(move_line).unwrap();
+        crate_stacks.apply_move_2(m)
+    }
+
+    let top_items: String = crate_stacks.top_items().collect();
+
+    println!("After all this moving with the other device, the top items on the crates are {}", top_items);
 }
 
 fn parse_crate_block(crate_block: &str) -> CrateStacks {
@@ -64,6 +75,16 @@ mod crate_stacks {
             for _ in 0..m.num {
                 let removed_item = self.stacks[m.from-1].pop_back().unwrap();
                 self.stacks[m.to-1].push_back(removed_item);
+            }
+        }
+
+        pub fn apply_move_2(&mut self, m: Move) {
+            let mut removed_items = Vec::new();
+            for _ in 0..m.num {
+                removed_items.push(self.stacks[m.from-1].pop_back().unwrap());
+            }
+            for _ in 0..m.num {
+                self.stacks[m.to-1].push_back(removed_items.pop().unwrap());
             }
         }
 
@@ -179,5 +200,15 @@ mod tests {
         let crate_stack = parse_crate_block("[A] [B]    \n[C] [D] [E]");
         let top_items: String = crate_stack.top_items().collect();
         assert_eq!(top_items, "ABE".to_string());
+    }
+
+    #[test]
+    fn test_apply_move_2() {
+        let mut crate_stack = parse_crate_block("[A] [B]    \n[C] [D] [E]");
+        let m = Move{num: 2, from: 1, to: 3};
+        crate_stack.apply_move_2(m);
+
+        let top_items: String = crate_stack.top_items().collect();
+        assert_eq!(top_items, " BA".to_string());
     }
 }
