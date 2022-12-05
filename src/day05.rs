@@ -1,5 +1,5 @@
 use std::error::Error;
-use regex::Regex;
+use lazy_regex::regex;
 use simple_error::SimpleError;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -10,11 +10,12 @@ struct Move {
 }
 
 fn parse_move_line(line: &str) -> Result<Move, Box<dyn Error>> {
-    let re = Regex::new(r"^move (\d+) from (\d+) to (\d)$")?;
+    let re = regex!(r"^move (\d+) from (\d+) to (\d)$");
     let caps = re.captures(line).ok_or(Box::new(SimpleError::new("Line doesn't match expectation for move")))?;
-    let num: u64 = caps.at(1).unwrap().parse().unwrap(); // If the expreccsion matched, then it should work here without panic
-    let from: u64 = caps.at(2).unwrap().parse().unwrap();
-    let to: u64 = caps.at(3).unwrap().parse().unwrap();
+
+    let num: u64 = caps.get(1).unwrap().as_str().parse().unwrap(); // If the expreccsion matched, then it should work here without panic
+    let from: u64 = caps.get(2).unwrap().as_str().parse().unwrap();
+    let to: u64 = caps.get(3).unwrap().as_str().parse().unwrap();
 
     Ok(Move{num, from, to})
 }
