@@ -7,3 +7,8 @@ column in the input has the same width. What we have then is 3 characters per co
 separated by a single whitespace. That means we can figure things out with simple math.
 
 Let's hack things together slowly in the test module.
+
+Okay, reading a move line is a straightforward regex thing. Now what about reading a 
+crate line? Ideally that would yield an iterator over pairs (stack / box)? Though 
+with the matching it seems there's some "lifetime" troubles. So, here it might just 
+be more practicaly to just write a for-loop that checks what's at the positions...
