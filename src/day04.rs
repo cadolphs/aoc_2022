@@ -97,7 +97,6 @@ mod range {
 #[cfg(test)]
 mod tests {
     use super::range::Range;
-    use super::*;
 
     #[test]
     fn test_if_ranges_contain_each_other() {

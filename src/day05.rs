@@ -63,10 +63,6 @@ mod crate_stacks {
             }
         }
 
-        pub fn num_stacks(&self) -> usize {
-            self.stacks.len()
-        }
-
         pub fn append_stack(&mut self, stack: usize, crate_id: char) {
             self.stacks[stack-1].push_front(crate_id);
         }
@@ -97,7 +93,7 @@ mod crate_stacks {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-struct Move {
+pub struct Move {
     num: usize,
     from: usize,
     to: usize,
@@ -121,7 +117,7 @@ fn parse_crate_line(line: &str) -> Vec<(usize, char)> {
     let num_stacks: usize = (line.len() + 1) / 4;
     let chars: Vec<char> = line.chars().collect();
 
-    for stack in (1..num_stacks + 1) {
+    for stack in 1..num_stacks + 1 {
         let stack_pos = (stack - 1) * 4 + 1;
         let char_at = chars[stack_pos as usize];
         match char_at {

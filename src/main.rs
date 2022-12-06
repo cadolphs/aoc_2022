@@ -1,13 +1,10 @@
-#[macro_use]
-extern crate simple_error;
-
 pub mod day01;
 pub mod day02;
 pub mod day03;
 pub mod day04;
 pub mod day05;
-mod device;
-pub mod day06;
+pub mod device;
+mod day06;
 
 use aocf::Aoc;
 use day01::run_day_01;
@@ -15,6 +12,7 @@ use day02::run_day_02;
 use day03::run_day_03;
 use day04::run_day_04;
 use day05::run_day_05;
+use day06::run_day_06;
 
 use std::env;
 use std::error::Error;
@@ -46,6 +44,11 @@ fn main() {
 
     if let Ok(input) = get_aoc_input(year, 5, &session_cookie) {
         run_day_05(input);
+        print_separation();
+    }
+
+    if let Ok(input) = get_aoc_input(year, 6, &session_cookie) {
+        run_day_06(input);
         print_separation();
     }
 }
