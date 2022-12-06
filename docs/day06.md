@@ -29,3 +29,19 @@ For example, if we have seen two unique characters so far, say `ab`, then there'
 `One` variant (`abb` means now `b` is the only single unique character). 
 Or the next character is different from the most recent character but matches the second-to-last character, as in `aba`. Then we move to the state where 
 we've got two unique characters but now in different order, `ba`.
+
+Okay, so that all works. But of course now they throw us a wrench in part 2 where we have to do 14 distinct characters. A manually written state machine doesn't quite work there 
+any more. Instead we'll need to use a _collection_ to keep track of what we've seen so far. Now, naively we can just look at the string in 
+overlapping windows of length 14 and check if there's 14 unique characters. But there should be a better way. This now reminds me of the _scanline_ algorithm for 
+word search. Here's how it works:
+
+1. We keep track of the (potential) start position in `start`.
+2. We have the search position in `head`.
+3. We maintain a queue (or dequeue?) of the letters between `start` and `head`.
+4. When we advance `head`, we compare the new character against the collection of letters between `start` and `head`.
+5. If the new letter wasn't seen before, we keep going until we hit 14 letters.
+6. Otherwise, if it _was_ seen before, we need to advance `start` all the way to after the _last_ occurrence (most recent) of that letter.
+
+Well. Turns out the `head` isn't even needed because that's implied in `letters.len()`. Then it was just about using the unit tests to avoid off-by-one errors and 
+to implement this algorithm. The nice thing is that we can then also get rid of all the `enum` and `struct` stuff, because we can just reuse the algo from part 2 for 
+part 1 as long as the "number of uniques" is kept as a variable. Yay!
