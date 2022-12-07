@@ -116,7 +116,7 @@ mod tests {
     fn test_processing() {
         use TerminalOutput::*;
         let mut dir_sizes = HashMap::new();
-        let mut active_dirs = Vec::new();
+        let mut active_dirs = vec!["/".to_string()];
 
         let mut lines = TEST_INPUT.lines();
         let mut reading_content = false;
@@ -126,7 +126,7 @@ mod tests {
 
             if !reading_content {
                 match output {
-                    CommandCDRoot => { active_dirs.clear(); },
+                    CommandCDRoot => { active_dirs.clear(); active_dirs.push("/".to_string())},
                     CommandCDUp => { active_dirs.pop(); },
                     CommandCDSSub(dirname) => {active_dirs.push(dirname);},
                     CommandLS => { reading_content = true},
@@ -148,5 +148,9 @@ mod tests {
             }
         }
 
+    assert_eq!(dir_sizes.get("e"), Some(&584));
+    assert_eq!(dir_sizes.get("a"), Some(&94853));
+    assert_eq!(dir_sizes.get("d"), Some(&24933642));
+    assert_eq!(dir_sizes.get("/"), Some(&48381165));
     }
 }
