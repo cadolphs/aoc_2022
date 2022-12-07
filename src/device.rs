@@ -89,6 +89,19 @@ impl FromStr for TerminalOutput {
     }
 }
 
+fn compute_full_path(active_dirs: &Vec<String>, dirname: &String) -> String {
+    if active_dirs.len() == 1 {
+        return format!("/{}", dirname).to_string();
+    }
+
+    let sep = "/";
+
+    let mut path = active_dirs.last().unwrap().clone();
+    path.push_str(sep);
+    path.push_str(dirname);
+    path
+}
+
 pub fn parse_terminal_output_for_dir_sizes(output: &str) -> HashMap<String, u64> {
     use TerminalOutput::*;
 
@@ -110,6 +123,7 @@ pub fn parse_terminal_output_for_dir_sizes(output: &str) -> HashMap<String, u64>
                     active_dirs.pop();
                 }
                 CommandCDSSub(dirname) => {
+                    let dirname = compute_full_path(&active_dirs, &dirname);
                     active_dirs.push(dirname);
                 }
                 CommandLS => reading_content = true,
@@ -242,9 +256,18 @@ mod tests {
         
         let dir_sizes = parse_terminal_output_for_dir_sizes(TEST_INPUT);
 
-        assert_eq!(dir_sizes.get("e"), Some(&584));
-        assert_eq!(dir_sizes.get("a"), Some(&94853));
-        assert_eq!(dir_sizes.get("d"), Some(&24933642));
+        assert_eq!(dir_sizes.get("/a/e"), Some(&584));
+        assert_eq!(dir_sizes.get("/a"), Some(&94853));
+        assert_eq!(dir_sizes.get("/d"), Some(&24933642));
         assert_eq!(dir_sizes.get("/"), Some(&48381165));
+    }
+
+    #[test]
+    fn test_full_path_comp() {
+        let active_dirs = vec!["/".to_string(), "/b".to_string()];
+        let dirname = "c".to_string();
+
+        let result = compute_full_path(&active_dirs, &dirname);
+        assert_eq!(result, "/b/c".to_string());
     }
 }

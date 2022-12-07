@@ -18,3 +18,10 @@ So. First, we need to parse the input. For now I'm using a single enum that keep
 And then for each command I have an enum variant as well as for a file entry and a directory entry. Tests check that the parsing works as intended.
 
 Now that the parsing works, what about the actual algorithm? Let's start with a messy loop, then refactor later :)
+
+So. The loop I created worked for the test input on the aoc site, but I got a wrong result for the actual puzzle input. It says my number is too low. 
+I assume that indeed we can have _sub_-directories with non-unique names, which messes up my algorithm. That just means I should tweak the way the 
+directory tally is computed.
+
+Okay. Just as I suspected. So now in the `active_dirs` vec, when adding a new entry, it needs to be prefixed with the "fully qualified path". So, this 
+is a good example where a _simple_ test case (the input on the AOC problem page) doesn't catch _all_ the subtleties of the true input.
