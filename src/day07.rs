@@ -54,6 +54,8 @@ impl FromStr for TerminalOutput {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::*;
     use indoc::indoc;
 
@@ -85,7 +87,7 @@ mod tests {
     );
 
     #[test]
-    fn input_hacking() {
+    fn test_parsing() {
         // Just trying out some things about parsing
         let output: TerminalOutput = "$ cd /".parse().unwrap();
         assert_eq!(output, TerminalOutput::CommandCDRoot);
@@ -108,5 +110,43 @@ mod tests {
             let expected = TerminalOutput::FileEntry(1234, filename.to_string());
             assert_eq!(output, expected);
         }
+    }
+
+    #[test]
+    fn test_processing() {
+        use TerminalOutput::*;
+        let mut dir_sizes = HashMap::new();
+        let mut active_dirs = Vec::new();
+
+        let mut lines = TEST_INPUT.lines();
+        let mut reading_content = false;
+        let mut next_line = lines.next();
+        while let Some(line) = next_line {
+            let output: TerminalOutput = line.parse().unwrap();
+
+            if !reading_content {
+                match output {
+                    CommandCDRoot => { active_dirs.clear(); },
+                    CommandCDUp => { active_dirs.pop(); },
+                    CommandCDSSub(dirname) => {active_dirs.push(dirname);},
+                    CommandLS => { reading_content = true},
+                    _ => {panic!("Shouldn't get to content entries without reading_content = true");}
+                }
+                next_line = lines.next();
+            } else {
+                match output {
+                    DirectoryEntry(_) => { },
+                    FileEntry(size, _) => {
+                        for dir in &active_dirs {
+                            let entry: &mut u64 = dir_sizes.entry(dir.clone()).or_default();
+                            *entry += size;
+                        }
+                    }
+                    _ => { reading_content = false; }
+                }
+                if reading_content { next_line = lines.next(); } // only advance if we didn't just read a command
+            }
+        }
+
     }
 }
