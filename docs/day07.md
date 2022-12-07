@@ -32,3 +32,10 @@ And finally, the code is a big mess because I hacked everything together in one 
 will catch if we mess up anything too big.
 
 First, the device module is getting too big. Let's split it into separate modules.
+
+## Refactoring
+The first step is to just move `device.rs` to `device/mod.rs`. That shouldn't change anything else. But now we can create extra files to house the various things. So now
+we'll create a file for the message parsing and one for the filesystem.
+
+To do that "gracefully" instead of in one big go, I first just _copy_ all the message parsing stuff into `messages.rs`. Then I _move_ the tests over. Then, I can replace the 
+originals in `mod.rs` with just imports (and re-exports?) of the stuff in `messages.rs`.
