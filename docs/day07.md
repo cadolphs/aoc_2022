@@ -25,3 +25,5 @@ directory tally is computed.
 
 Okay. Just as I suspected. So now in the `active_dirs` vec, when adding a new entry, it needs to be prefixed with the "fully qualified path". So, this 
 is a good example where a _simple_ test case (the input on the AOC problem page) doesn't catch _all_ the subtleties of the true input.
+
+Now that this is fixed, we can easily solve part 2 as well, with iterators and filters. Let's go.
