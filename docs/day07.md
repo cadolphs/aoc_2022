@@ -27,3 +27,8 @@ Okay. Just as I suspected. So now in the `active_dirs` vec, when adding a new en
 is a good example where a _simple_ test case (the input on the AOC problem page) doesn't catch _all_ the subtleties of the true input.
 
 Now that this is fixed, we can easily solve part 2 as well, with iterators and filters. Let's go.
+
+And finally, the code is a big mess because I hacked everything together in one loop. We can probably refactor that and clean it up. We have the tests that 
+will catch if we mess up anything too big.
+
+First, the device module is getting too big. Let's split it into separate modules.
