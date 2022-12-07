@@ -39,3 +39,7 @@ we'll create a file for the message parsing and one for the filesystem.
 
 To do that "gracefully" instead of in one big go, I first just _copy_ all the message parsing stuff into `messages.rs`. Then I _move_ the tests over. Then, I can replace the 
 originals in `mod.rs` with just imports (and re-exports?) of the stuff in `messages.rs`.
+
+Phew. Then, I encapsulated all those collections in their own `ParseHelper` struct. That then allowed me to clean up the logic quite a bit. I didn't like this awkward coupling 
+where depending on the "reading mode" I advance to the next line or not. That then also meant I didn't need to use different logic for processing lines or commands depending on what 
+came before. The resulting code is pretty concise.
