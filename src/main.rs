@@ -4,7 +4,8 @@ pub mod day03;
 pub mod day04;
 pub mod day05;
 pub mod device;
-mod day06;
+pub mod day06;
+pub mod day07;
 
 use aocf::Aoc;
 use day01::run_day_01;
@@ -13,6 +14,7 @@ use day03::run_day_03;
 use day04::run_day_04;
 use day05::run_day_05;
 use day06::run_day_06;
+use day07::run_day_07;
 
 use std::env;
 use std::error::Error;
