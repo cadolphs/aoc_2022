@@ -16,3 +16,5 @@ Let's start with a simple command crawler and see where we get.
 
 So. First, we need to parse the input. For now I'm using a single enum that keeps track of everything a line can be: A command or an entry. 
 And then for each command I have an enum variant as well as for a file entry and a directory entry. Tests check that the parsing works as intended.
+
+Now that the parsing works, what about the actual algorithm? Let's start with a messy loop, then refactor later :)
