@@ -56,3 +56,6 @@ Cool stuff. Now let's use the cum_max arrays to figure out which treas are visib
 Okay, now learning about how to deal with applying things to arrays. Seems like "<" isn't overloaded for arrays, so I have to write it myself. That 
 brings up the `Zip` structure. Looks like this is where all the cool "lockstep elementwise" stuff is happening. I might even be able to rewrite the 
 "cumulative maximum" function with Zip...
+
+Now as the last step, there's lots of tricky array shuffling. But this is good practice and I'm getting the hang of it, maybe. By using unit tests on the 
+aoc test input, I made it so that once I actually ran everything on the puzzle input, I got the right answer on first try!

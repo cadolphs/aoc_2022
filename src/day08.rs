@@ -1,6 +1,13 @@
-use indoc::indoc;
 use ndarray::prelude::*;
-use ndarray::IntoNdProducer;
+use ndarray::Zip;
+
+pub fn run_day_08(input: String) {
+    let trees = digit_matrix_to_array(&input);
+
+    let ans = count_visible_trees(&trees);
+
+    println!("There are {} visible trees!", ans);
+}
 
 fn digit_matrix_to_array(input: &str) -> Array2<i8> {
     //first read input into vec
@@ -27,42 +34,98 @@ fn digit_matrix_to_array(input: &str) -> Array2<i8> {
     arr
 }
 
+fn cumulative_max(arr: &Array2<i8>, view: ViewPoint) -> Array2<i8> {
+    fn cum_sum_for_array(row: &ArrayView1<i8>) -> Array1<i8> {
+        let mut max: i8 = 0;
+        Zip::from(row).map_collect(|&x| {
+            if x > max {
+                max = x;
+            }
+            max
+        })
+    }
 
-enum Direction {
-    Normal,
-    Reverse
+    let axis = match &view {
+        ViewPoint::Left | ViewPoint::Right => Axis(0),
+        _ => Axis(1),
+    };
+
+    let slice = match &view {
+        ViewPoint::Left | ViewPoint::Top => s![.., ..],
+        _ => s![..;-1, ..;-1],
+    };
+
+    let mut cum_max: Array2<i8> = Array2::default(arr.raw_dim());
+    let mut cum_max_view = cum_max.slice_mut(slice);
+    let arr_view = arr.slice(slice);
+
+    Zip::from(cum_max_view.axis_iter_mut(axis))
+        .and(arr_view.axis_iter(axis))
+        .for_each(|mut cumulative, slice| {
+            cumulative.assign(&cum_sum_for_array(&slice));
+        });
+
+    return cum_max;
 }
 
-fn cumulative_max(arr: &Array2<i8>, axis: Axis, direction: Direction) -> Array2<i8> {
-    let mut cum_max: Array2<i8> = Array2::default(arr.raw_dim());
-    
-    for (i, row) in arr.axis_iter(axis).enumerate() {
-        let mut acc = 0;
+fn count_visible_trees(arr: &Array2<i8>) -> usize {
+    use ViewPoint::*;
+    let views = vec![Left, Right, Top, Bottom];
 
-        let row_iter_enum: Box<dyn Iterator<Item=(usize, &i8)>> = match &direction {
-            Direction::Normal => Box::new(row.iter().enumerate()),
-            Direction::Reverse => Box::new(row.iter().enumerate().rev())
-        };
+    fn combine_maps(a: &Array2<bool>, b: &Array2<bool>) -> Array2<bool> {
+        Zip::from(a).and(b).map_collect(|a, b| *a || *b)
+    }
 
-        for (j, &x) in row_iter_enum {
-            if acc < x {
-                acc = x;
-            }
-            cum_max[[i, j]] = acc;
-        }
-    }
-    if axis == Axis(0) {
-        cum_max
-    } else {
-        cum_max.reversed_axes()
-    }
+    let visible_tree_maps: Vec<Array2<bool>> = views
+        .iter()
+        .map(|view| compute_visible_trees_from(arr, *view))
+        .collect();
+
+    let visible_trees = visible_tree_maps.iter().fold(
+        Array2::default((arr.nrows() - 2, arr.ncols() - 2)),
+        |acc, el| combine_maps(&acc, el),
+    );
+
+    let answer = visible_trees.iter().filter(|&&i| i == true).count();
+
+    let trees_on_perimeter = 2 * (arr.nrows() + arr.ncols()) - 4; //count all edges counts corners twice
+    answer + trees_on_perimeter
+}
+
+#[derive(Debug, Clone, Copy)]
+enum ViewPoint {
+    Left,
+    Right,
+    Top,
+    Bottom,
+}
+
+fn compute_visible_trees_from(tree_map: &Array2<i8>, view: ViewPoint) -> Array2<bool> {
+    let relevant_trees = tree_map.slice(s![1..-1, 1..-1]); //only inner trees important
+
+    let cum_max = cumulative_max(&tree_map, view);
+
+    use ViewPoint::*;
+    let some_slice = match view {
+        Left => s![1..-1, 0..-2],
+        Right => s![1..-1, 2..],
+        Top => s![0..-2, 1..-1],
+        Bottom => s![2.., 1..-1],
+    };
+
+    let relevant_max = cum_max.slice(some_slice);
+
+    let visible_trees: Array2<bool> = Zip::from(&relevant_max)
+        .and(&relevant_trees)
+        .map_collect(|&max, &tree| max < tree);
+    visible_trees
 }
 
 #[cfg(test)]
 mod tests {
-    use ndarray::{Array1, Zip, NdProducer};
-
     use super::*;
+    use indoc::indoc;
+
     #[test]
     fn check_test_building_array() {
         let input = "123\n456\n789";
@@ -88,17 +151,17 @@ mod tests {
         let arr: Array2<i8> = digit_matrix_to_array(input);
 
         // figure out cumulative maximum leftwise
-        let cum_max: Array2<i8> = cumulative_max(&arr, Axis(0), Direction::Normal);
+        let cum_max: Array2<i8> = cumulative_max(&arr, ViewPoint::Left);
         assert_eq!(cum_max[[1, 3]], 5);
 
-        let cum_max: Array2<i8> = cumulative_max(&arr, Axis(1), Direction::Normal);
-        assert_eq!(cum_max[[3,0]], 6);
+        let cum_max: Array2<i8> = cumulative_max(&arr, ViewPoint::Top);
+        assert_eq!(cum_max[[3, 0]], 6);
 
-        let cum_max: Array2<i8> = cumulative_max(&arr, Axis(0), Direction::Reverse);
-        assert_eq!(cum_max[[1,0]], 5);
+        let cum_max: Array2<i8> = cumulative_max(&arr, ViewPoint::Right);
+        assert_eq!(cum_max[[1, 0]], 5, "Failed for right side");
 
-        let cum_max: Array2<i8> = cumulative_max(&arr, Axis(1), Direction::Reverse);
-        assert_eq!(cum_max[[0,3]], 9);
+        let cum_max: Array2<i8> = cumulative_max(&arr, ViewPoint::Bottom);
+        assert_eq!(cum_max[[0, 3]], 9);
     }
 
     #[test]
@@ -111,59 +174,71 @@ mod tests {
             33549
             35390"
         );
-        
+
         let arr: Array2<i8> = digit_matrix_to_array(input);
 
         // figure out cumulative maximum leftwise
-        let cum_max: Array2<i8> = cumulative_max(&arr, Axis(0), Direction::Normal);
+        let cum_max: Array2<i8> = cumulative_max(&arr, ViewPoint::Left);
 
         // now use that to figure out which trees are visible
         // first, we grab a view of the original array from the middle
         let relevant_trees = arr.slice(s![1..-1, 1..-1]);
-        assert_eq!(relevant_trees[[0,0]], 5);
+        assert_eq!(relevant_trees[[0, 0]], 5);
 
         // next, we grab the relevant cumsum slice:
-        let relevant_max = cum_max.slice(s![1..-1,0..-2]);
-        assert_eq!(relevant_max[[0,0]], 2);
+        let relevant_max = cum_max.slice(s![1..-1, 0..-2]);
+        assert_eq!(relevant_max[[0, 0]], 2);
 
         // a tree is visible from the left if its height is larger than the one at the relevant tree
-        let some_output: Array2<bool> = Zip::from(&relevant_max).and(&relevant_trees).map_collect(|&max, &tree| max < tree);
-        assert_eq!(some_output[[0,0]], true);
-        assert_eq!(some_output[[0, 2]], false);
+        //let some_output: Array2<bool> = Zip::from(&relevant_max).and(&relevant_trees).map_collect(|&max, &tree| max < tree);
+        let some_output = compute_visible_trees_from(&arr, ViewPoint::Left);
+        let expected = array![
+            [true, false, false],
+            [false, false, false],
+            [false, true, false]
+        ];
+        assert_eq!(some_output, expected);
 
+        let other_output = compute_visible_trees_from(&arr, ViewPoint::Bottom);
+        let expected = array![
+            [false, false, false],
+            [false, false, false],
+            [false, true, false]
+        ];
+
+        assert_eq!(other_output, expected);
+
+        let other_output = compute_visible_trees_from(&arr, ViewPoint::Right);
+        let expected = array![
+            [false, true, false],
+            [true, false, true],
+            [false, false, false]
+        ];
+        assert_eq!(other_output, expected);
+
+        let other_output = compute_visible_trees_from(&arr, ViewPoint::Top);
+        let expected = array![
+            [true, true, false],
+            [false, false, false],
+            [false, false, false]
+        ];
+        assert_eq!(other_output, expected);
     }
 
     #[test]
-    fn cumsum_for_row() {
-        let arr = array![1,3,2,5,4];
-        let mut max = 0;
-        let maxes = Zip::from(&arr).map_collect(|&x| {
-            if x > max {
-                max = x;
-            }
-            max
-        });
+    fn test_count_visible() {
+        let input = indoc!(
+            "
+            30373
+            25512
+            65332
+            33549
+            35390"
+        );
 
-        let expected = array![1, 3, 3, 5, 5];
-        assert_eq!(expected, maxes);
-    }
+        let arr = digit_matrix_to_array(input);
 
-    #[test]
-    fn cumsum_zip_for_matrix() {
-        let arr = array![[1,3,2,5,4], [3, 2, 1, 5, 10]];
-
-        fn cum_sum_for_row(row: &ArrayView1<i8>) -> Array1<i8> {
-            let mut max:i8 = 0;
-            Zip::from(row).map_collect(|&x| {
-                if x > max { max = x; }
-                max
-            })
-        }
-
-        let mut cum_max: Array2<i8> = Array2::default(arr.raw_dim());
-        Zip::from(cum_max.rows_mut()).and(arr.rows()).for_each(|mut cum_max_row, row| cum_max_row.assign(&cum_sum_for_row(&row)));
-
-        let expected = array![[1, 3, 3, 5, 5], [3, 3, 3, 5, 10]];
-        assert_eq!(expected, cum_max);
+        let result = count_visible_trees(&arr);
+        assert_eq!(result, 21);
     }
 }
