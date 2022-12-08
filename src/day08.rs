@@ -1,5 +1,5 @@
 use indoc::indoc;
-use ndarray::{Array2, Axis};
+use ndarray::prelude::*;
 
 fn digit_matrix_to_array(input: &str) -> Array2<i8> {
     //first read input into vec
@@ -59,7 +59,7 @@ fn cumulative_max(arr: &Array2<i8>, axis: Axis, direction: Direction) -> Array2<
 
 #[cfg(test)]
 mod tests {
-    use ndarray::Array1;
+    use ndarray::{Array1, Zip};
 
     use super::*;
     #[test]
@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    fn hacking_with_left_visibility() {
+    fn test_cumulative_max() {
         let input = indoc!(
             "
             30373
@@ -98,5 +98,37 @@ mod tests {
 
         let cum_max: Array2<i8> = cumulative_max(&arr, Axis(1), Direction::Reverse);
         assert_eq!(cum_max[[0,3]], 9);
+    }
+
+    #[test]
+    fn test_compute_visibility() {
+        let input = indoc!(
+            "
+            30373
+            25512
+            65332
+            33549
+            35390"
+        );
+        
+        let arr: Array2<i8> = digit_matrix_to_array(input);
+
+        // figure out cumulative maximum leftwise
+        let cum_max: Array2<i8> = cumulative_max(&arr, Axis(0), Direction::Normal);
+
+        // now use that to figure out which trees are visible
+        // first, we grab a view of the original array from the middle
+        let relevant_trees = arr.slice(s![1..-1, 1..-1]);
+        assert_eq!(relevant_trees[[0,0]], 5);
+
+        // next, we grab the relevant cumsum slice:
+        let relevant_max = cum_max.slice(s![1..-1,0..-2]);
+        assert_eq!(relevant_max[[0,0]], 2);
+
+        // a tree is visible from the left if its height is larger than the one at the relevant tree
+        let some_output: Array2<bool> = Zip::from(&relevant_max).and(&relevant_trees).map_collect(|&max, &tree| max < tree);
+        assert_eq!(some_output[[0,0]], true);
+        assert_eq!(some_output[[0, 2]], false);
+
     }
 }

@@ -35,3 +35,24 @@ Well. First I need to compute the cumulative maximum. Couldn't find a nice easy 
 
 Next it's about setting different axes and directions. The axes are easy; just pass those as an arg to the `axis_iter`. What about 
 direction?
+
+Hah. This is where a statically typed language becomes a bit more awkward. Basically, I wanted to use in the for loop either the 
+"forward" or the "reverse" version of the enumerated iterator over rows: 
+
+```
+let row_iter_enum = row.iter().enumerate();
+if let Direction::Reverse = direction {
+    row_iter_enum = row_iter_enum.rev();
+}
+```
+
+However, that doesn't work! Because those iterators will have different types, and you can't assign variables of different types to each other! 
+
+Now for the loop, all we need to know is that both iterators implement the `Iterator` trait and will yield items of type `(usize, &i8)`. So we need 
+a dynamic trait type. And because you can't know the size of a dynamic type at runtime, you need to put it in a `Box`.
+
+Cool stuff. Now let's use the cum_max arrays to figure out which treas are visible from which side.
+
+Okay, now learning about how to deal with applying things to arrays. Seems like "<" isn't overloaded for arrays, so I have to write it myself. That 
+brings up the `Zip` structure. Looks like this is where all the cool "lockstep elementwise" stuff is happening. I might even be able to rewrite the 
+"cumulative maximum" function with Zip...
