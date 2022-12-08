@@ -1,5 +1,6 @@
 use indoc::indoc;
 use ndarray::prelude::*;
+use ndarray::IntoNdProducer;
 
 fn digit_matrix_to_array(input: &str) -> Array2<i8> {
     //first read input into vec
@@ -33,7 +34,7 @@ enum Direction {
 }
 
 fn cumulative_max(arr: &Array2<i8>, axis: Axis, direction: Direction) -> Array2<i8> {
-    let mut cum_max: Array2<i8> = Array2::default((arr.nrows(), arr.ncols()));
+    let mut cum_max: Array2<i8> = Array2::default(arr.raw_dim());
     
     for (i, row) in arr.axis_iter(axis).enumerate() {
         let mut acc = 0;
@@ -59,7 +60,7 @@ fn cumulative_max(arr: &Array2<i8>, axis: Axis, direction: Direction) -> Array2<
 
 #[cfg(test)]
 mod tests {
-    use ndarray::{Array1, Zip};
+    use ndarray::{Array1, Zip, NdProducer};
 
     use super::*;
     #[test]
@@ -130,5 +131,39 @@ mod tests {
         assert_eq!(some_output[[0,0]], true);
         assert_eq!(some_output[[0, 2]], false);
 
+    }
+
+    #[test]
+    fn cumsum_for_row() {
+        let arr = array![1,3,2,5,4];
+        let mut max = 0;
+        let maxes = Zip::from(&arr).map_collect(|&x| {
+            if x > max {
+                max = x;
+            }
+            max
+        });
+
+        let expected = array![1, 3, 3, 5, 5];
+        assert_eq!(expected, maxes);
+    }
+
+    #[test]
+    fn cumsum_zip_for_matrix() {
+        let arr = array![[1,3,2,5,4], [3, 2, 1, 5, 10]];
+
+        fn cum_sum_for_row(row: &ArrayView1<i8>) -> Array1<i8> {
+            let mut max:i8 = 0;
+            Zip::from(row).map_collect(|&x| {
+                if x > max { max = x; }
+                max
+            })
+        }
+
+        let mut cum_max: Array2<i8> = Array2::default(arr.raw_dim());
+        Zip::from(cum_max.rows_mut()).and(arr.rows()).for_each(|mut cum_max_row, row| cum_max_row.assign(&cum_sum_for_row(&row)));
+
+        let expected = array![[1, 3, 3, 5, 5], [3, 3, 3, 5, 10]];
+        assert_eq!(expected, cum_max);
     }
 }
