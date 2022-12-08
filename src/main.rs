@@ -6,6 +6,7 @@ pub mod day05;
 pub mod device;
 pub mod day06;
 pub mod day07;
+pub mod day08;
 
 use aocf::Aoc;
 use day01::run_day_01;
