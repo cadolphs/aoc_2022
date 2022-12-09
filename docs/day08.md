@@ -59,3 +59,5 @@ brings up the `Zip` structure. Looks like this is where all the cool "lockstep e
 
 Now as the last step, there's lots of tricky array shuffling. But this is good practice and I'm getting the hang of it, maybe. By using unit tests on the 
 aoc test input, I made it so that once I actually ran everything on the puzzle input, I got the right answer on first try!
+
+On to part 2. Okay, more such logic. Though I think we can (almost) use the same approach. I want to avoid doing this individually for each tree.

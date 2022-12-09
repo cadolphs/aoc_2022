@@ -241,4 +241,14 @@ mod tests {
         let result = count_visible_trees(&arr);
         assert_eq!(result, 21);
     }
+
+    #[test]
+    fn tree_vis_hacking() {
+        let row = array![2, 5, 5, 1, 2];
+        let height_pos = HashMap::new();
+        for i in 0..row.len() {
+            let height = row[height_pos];
+            todo!()
+        }
+    }
 }
