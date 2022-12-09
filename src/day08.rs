@@ -7,6 +7,10 @@ pub fn run_day_08(input: String) {
     let ans = count_visible_trees(&trees);
 
     println!("There are {} visible trees!", ans);
+
+    let best_score = compute_scenic_score(&trees);
+
+    println!("The best possible scenic score is {}", best_score);
 }
 
 fn digit_matrix_to_array(input: &str) -> Array2<i8> {
@@ -121,10 +125,69 @@ fn compute_visible_trees_from(tree_map: &Array2<i8>, view: ViewPoint) -> Array2<
     visible_trees
 }
 
+fn compute_scenic_score(tree_map: &Array2<i8>) -> usize {
+    use ViewPoint::*;
+    let views = vec![Left, Right, Bottom, Top];
+    let scores: Vec<Array2<usize>> = views.into_iter().map(|view| compute_num_trees_seen_from_tree(tree_map, view)).collect();
+
+    //let final_score = scores[0] * scores[1] * scores[2] * scores[3];
+    let final_score = scores.into_iter().reduce(|acc, x| acc * x).unwrap();
+    let best_score = final_score.into_iter().max().unwrap();
+    best_score
+}
+
+fn compute_num_trees_seen_for_row(line: &ArrayView1<i8>) -> Array1<usize> {
+    let mut num_trees_seen: Array1<usize> = Array1::default(line.raw_dim());
+
+    let mut last_seen: [Option<usize>; 11] = [None; 11];
+
+    for i in 0..line.len() {
+        let height = line[i] as usize;
+
+        let nearest_higher_tree_pos: Option<usize> = *last_seen[height..].iter().max().unwrap();
+        num_trees_seen[i] = match nearest_higher_tree_pos {
+            None => i,
+            Some(pos) => i - pos,
+        };
+
+        last_seen[height] = Some(i);
+    }
+
+    num_trees_seen
+}
+fn compute_num_trees_seen_from_tree(tree_map: &Array2<i8>, view: ViewPoint) -> Array2<usize> {
+    use ViewPoint::*;
+
+    let mut num_tree_map: Array2<usize> = Array2::default(tree_map.raw_dim());
+
+    let view_slice = match &view {
+        Left | Top => s![.., ..],
+        Right | Bottom => s![..;-1,..;-1],
+    };
+
+    let tree_map_view = tree_map.slice(view_slice);
+    let mut num_tree_view = num_tree_map.slice_mut(view_slice);
+
+    let axis = match &view {
+        ViewPoint::Left | ViewPoint::Right => Axis(0),
+        _ => Axis(1),
+    };
+
+    Zip::from(num_tree_view.axis_iter_mut(axis))
+        .and(tree_map_view.axis_iter(axis))
+        .for_each(|mut num_tree_row, tree_row| {
+            num_tree_row.assign(&compute_num_trees_seen_for_row(&tree_row))
+        });
+
+    num_tree_map
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use indoc::indoc;
+    use itertools::Itertools;
 
     #[test]
     fn check_test_building_array() {
@@ -245,10 +308,37 @@ mod tests {
     #[test]
     fn tree_vis_hacking() {
         let row = array![2, 5, 5, 1, 2];
-        let height_pos = HashMap::new();
-        for i in 0..row.len() {
-            let height = row[height_pos];
-            todo!()
-        }
+        let mut num_trees_seen: Array1<usize> = compute_num_trees_seen_for_row(&row.view());
+
+        let expected = array![0, 1, 1, 1, 2];
+        assert_eq!(num_trees_seen, expected);
+    }
+
+    #[test]
+    fn test_count_tree_view() {
+        let input = indoc!(
+            "
+            30373
+            25512
+            65332
+            33549
+            35390"
+        );
+        let arr = digit_matrix_to_array(input);
+        let result = compute_num_trees_seen_from_tree(&arr, ViewPoint::Left);
+        let expected = array![[0,1, 2, 3, 1], [0, 1, 1, 1, 2], [0, 1, 1, 1, 1], [0, 1, 2, 1, 4], [0, 1, 1, 3, 1]];
+        assert_eq!(result, expected);
+
+        let result = compute_num_trees_seen_from_tree(&arr, ViewPoint::Right);
+        let expected = array![[2, 1, 1, 1, 0], [1, 1, 2, 1, 0], [4, 3, 1, 1, 0], [1, 1, 2, 1, 0], [1, 2, 1, 1, 0]];
+        assert_eq!(result, expected);
+
+        let result = compute_num_trees_seen_from_tree(&arr, ViewPoint::Bottom);
+        let expected = array![[2, 1, 1, 4, 3], [1, 1, 2, 1, 1], [2, 2, 1, 1, 1], [1, 1, 1, 1, 1], [0, 0, 0, 0, 0]];
+        assert_eq!(result, expected);
+
+        let best_score = compute_scenic_score(&arr);
+        assert_eq!(best_score, 8);
+
     }
 }

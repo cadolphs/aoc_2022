@@ -60,4 +60,10 @@ brings up the `Zip` structure. Looks like this is where all the cool "lockstep e
 Now as the last step, there's lots of tricky array shuffling. But this is good practice and I'm getting the hang of it, maybe. By using unit tests on the 
 aoc test input, I made it so that once I actually ran everything on the puzzle input, I got the right answer on first try!
 
-On to part 2. Okay, more such logic. Though I think we can (almost) use the same approach. I want to avoid doing this individually for each tree.
+On to part 2. Okay, more such logic. Though I think we can (almost) use the same approach. I want to avoid doing this individually for each tree because 
+that might potentially run for a long time if there's lots of small trees. So here the idea is to keep track of "when a tree was last seen at a given height".
+
+Phew. That wasn't so bad in the end; at least I didn't have to shift-align two arrays. Yaaay! And with the testing I got it again right on the first try.
+
+In any case. Numpy has far better ergonomics for quickly messing about with arrays, but here I assume the compiler already makes sure that a whole number of 
+typical array-wrangling mistakes are avoided, just because the types wouldn't match. So, you win some you lose some.
