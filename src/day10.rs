@@ -1,4 +1,4 @@
-use crate::device::{CPUtracker, Instruction};
+use crate::device::{CPUtracker, render};
 
 pub fn run_day_10(input: String) {
     let mut tracker = CPUtracker::new();
@@ -14,4 +14,7 @@ pub fn run_day_10(input: String) {
         .take(6).map(|(i, signal)| i * signal).sum();
     
     println!("Multiplying stuff like in part 1 gives answer {}", ans);
+
+    let crt_output = render(tracker.all_xs().cloned());
+    println!("{}", crt_output);
 }
