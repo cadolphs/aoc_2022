@@ -7,7 +7,7 @@ pub fn render<I: IntoIterator<Item=i32>>(input: I) -> String {
     let mut chars: Vec<char> = Vec::new();
     
     while row.len() == 40 {
-        let col_positions = (1..=40);
+        let col_positions = (0..40);
         let chars_iter = col_positions.zip(row).map(|(col, x)| {
             if (col - x).abs() <= 1 {
                 '#'
@@ -21,9 +21,6 @@ pub fn render<I: IntoIterator<Item=i32>>(input: I) -> String {
             chars.push('\n');
         }
     }
-
-    // Right now it only needs to work for a single line
-    
 
     chars.into_iter().collect()
 }
