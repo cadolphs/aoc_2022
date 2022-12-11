@@ -19,3 +19,5 @@ A quick thought. In the monkey's `take_turn` method, I'm mixing return values an
 That's considered a violation of the "command-query separation" design principle. However, 
 this principle isn't ironclad (cf. methods like `pop` on a stack data structure). Here, I'd argue 
 that the side effects aren't _surprising_.
+
+Next up the parsing...
