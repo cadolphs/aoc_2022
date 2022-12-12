@@ -83,9 +83,7 @@ impl FromStr for MonkeyGame {
             monkeys.push(block.parse()?);
         }
 
-        // not strictly the LCM but _should_ do the trick
-    
-        let lcm = monkeys.iter().map(|monkey| monkey.get_prime_test()).reduce(|acc, x| num::integer::lcm(acc, x)).unwrap();
+        let lcm = monkeys.iter().map(|monkey| monkey.get_prime_test()).product();
         Ok(MonkeyGame::new(monkeys, lcm))
     }
 }
