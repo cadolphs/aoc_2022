@@ -24,12 +24,13 @@ impl FromStr for Operation {
     type Err = Box<dyn Error>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s == "Operation: new = old * old" {
+        let s_trimmed = s.trim();
+        if s_trimmed == "Operation: new = old * old" {
             Ok(Operation::Square)
-        } else if s.starts_with("Operation: new = old + ") {
+        } else if s_trimmed.starts_with("Operation: new = old + ") {
             let num: i32 = s[23..].parse()?;
             Ok(Operation::Add(num))
-        } else if s.starts_with("Operation: new = old * ") {
+        } else if s_trimmed.starts_with("Operation: new = old * ") {
             let num: i32 = s[23..].parse()?;
             Ok(Operation::Mul(num))
         } else {
