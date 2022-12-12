@@ -187,7 +187,6 @@ fn compute_num_trees_seen_from_tree(tree_map: &Array2<i8>, view: ViewPoint) -> A
 mod tests {
     use super::*;
     use indoc::indoc;
-    use itertools::Itertools;
 
     #[test]
     fn check_test_building_array() {
@@ -308,7 +307,7 @@ mod tests {
     #[test]
     fn tree_vis_hacking() {
         let row = array![2, 5, 5, 1, 2];
-        let mut num_trees_seen: Array1<usize> = compute_num_trees_seen_for_row(&row.view());
+        let num_trees_seen: Array1<usize> = compute_num_trees_seen_for_row(&row.view());
 
         let expected = array![0, 1, 1, 1, 2];
         assert_eq!(num_trees_seen, expected);

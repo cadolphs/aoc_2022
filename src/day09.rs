@@ -165,7 +165,7 @@ impl Situation for Situation2 {
     fn apply_single_move(&mut self, m: Move) {
         self.knots[0] = self.knots[0] + m.to_vec();
 
-        for i in (1..10) {
+        for i in 1..10 {
             let distance_to_target = self.knots[i-1] - self.knots[i];
 
             if distance_to_target.inf_norm() > 1 {
