@@ -1,6 +1,6 @@
 use lazy_regex::regex_captures;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DivisibleTest {
     divisor: i32,
     true_monkey: usize,
@@ -18,6 +18,10 @@ impl DivisibleTest {
         } else {
             self.false_monkey
         }
+    }
+
+    pub fn get_reduced_x(&self, x: i32) -> i32 {
+        x % self.divisor
     }
 
     pub fn from_lines(lines: &[&str; 3]) -> Self {
