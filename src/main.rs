@@ -88,6 +88,11 @@ fn main() {
         run_day_11(input);
         print_separation();
     }
+
+    if let Ok(input) = get_aoc_input(year, 12, &session_cookie) {
+        run_day_12(input);
+        print_separation();
+    }
 }
 
 fn print_separation() {
