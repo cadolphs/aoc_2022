@@ -44,9 +44,9 @@ mod tests {
     #[test]
     fn test_square() {
         let ops = vec![Operation::Square, Operation::Add(42), Operation::Mul(2)];
-        let expecteds: Vec<u64> = vec![9.into(), 45.into(), 6.into()];
+        let expecteds: Vec<u64> = vec![9, 45, 6];
 
-        let x: u64 = 3.into();
+        let x: u64 = 3;
         for (op, expected) in ops.into_iter().zip(expecteds) {
             assert_eq!(op.apply(&x), expected);
         }
