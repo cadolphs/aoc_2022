@@ -6,12 +6,26 @@ use priority_queue::PriorityQueue;
 pub fn run_day_12(input: String) {
     let (terrain, start, stop) = read_terrain(&input);
 
-    let ans = find_path_length(&terrain, start, stop);
+    let ans = find_path_length(&terrain, start, stop).unwrap();
 
     println!("It takes {} steps to reach the end", ans);
+
+    let ans = find_best_start(&terrain, stop);
+
+    println!("But from the best start it only takes {} steps to reach the end", ans);
 }
 
-fn find_path_length(terrain: &Vec<Vec<i8>>, start: Vec2D, stop: Vec2D) -> i32 {
+fn find_best_start(terrain: &Vec<Vec<i8>>, stop: Vec2D) -> i32 {
+    let starts = get_all_possible_starts(terrain);
+
+    starts.into_iter().map(|start| find_path_length(terrain, start, stop))
+    .filter(|length| length.is_some())
+    .map(|x| x.unwrap())
+    .min().unwrap()
+
+}
+
+fn find_path_length(terrain: &Vec<Vec<i8>>, start: Vec2D, stop: Vec2D) -> Option<i32> {
     let mut steps_from_start: PriorityQueue<Vec2D, Reverse<i32>> = PriorityQueue::new();
     let mut visited: HashSet<Vec2D> = HashSet::new();
 
@@ -21,13 +35,11 @@ fn find_path_length(terrain: &Vec<Vec<i8>>, start: Vec2D, stop: Vec2D) -> i32 {
     let rows = terrain.len();
     let cols = terrain[0].len();
 
-    
-
     while !steps_from_start.is_empty() {
         let (current_node, Reverse(current_dist)) = steps_from_start.pop().unwrap(); // node with currently shortest paths
         
         if current_node == stop {
-            return current_dist;
+            return Some(current_dist);
         }
 
         let current_height = get_height(terrain, &current_node);
@@ -40,7 +52,7 @@ fn find_path_length(terrain: &Vec<Vec<i8>>, start: Vec2D, stop: Vec2D) -> i32 {
             }
         }
     }
-    panic!("Didn't find the steps!");
+    None
 }
 
 fn get_height(terrain: &Vec<Vec<i8>>, pos: &Vec2D) -> i8 {
@@ -101,6 +113,18 @@ fn letter_to_height(letter: char) -> i8 {
             }
         }
     }
+}
+
+fn get_all_possible_starts(terrain: &Vec<Vec<i8>>) -> Vec<Vec2D> {
+    let mut starts = vec![];
+    for (i, row) in terrain.iter().enumerate() {
+        for (j, height) in row.iter().enumerate() {
+            if *height == 1 {
+                starts.push(Vec2D(i as i32, j as i32));
+            }
+        }
+    }
+    starts
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
