@@ -37,15 +37,16 @@ pub fn run_day_11(input: String) {
 
 pub struct MonkeyGame {
     monkeys: Vec<Monkey>,
-    monkey_item_counter: Vec<usize>
+    monkey_item_counter: Vec<usize>,
+    lcm: u64,
 }
 
 
 impl MonkeyGame {
-    pub fn new(monkeys: Vec<Monkey>) -> Self {
+    pub fn new(monkeys: Vec<Monkey>, lcm: u64) -> Self {
         let counter = vec![0usize; monkeys.len()];
 
-        MonkeyGame{ monkeys: monkeys, monkey_item_counter: counter }
+        MonkeyGame{ monkeys: monkeys, monkey_item_counter: counter, lcm: lcm }
     }
 
     pub fn play_round(&mut self) {
@@ -53,7 +54,7 @@ impl MonkeyGame {
             let monkey_moves = self.monkeys[monkey_id].take_turn();
             self.monkey_item_counter[monkey_id] += monkey_moves.len();
             for monkey_move in monkey_moves {
-                self.monkeys[monkey_move.target_monkey].receive_item(monkey_move.item);
+                self.monkeys[monkey_move.target_monkey].receive_item(monkey_move.item % self.lcm);
             }
         }
     }
@@ -62,7 +63,7 @@ impl MonkeyGame {
         self.monkey_item_counter.clone()
     }
 
-    pub fn set_divisor(&mut self, divisor: i32) {
+    pub fn set_divisor(&mut self, divisor: u64) {
         for monkey in &mut self.monkeys {
             monkey.set_divisor(divisor);
         }
@@ -76,13 +77,16 @@ impl FromStr for MonkeyGame {
         let blocks = s.split("\n\n");
 
         // let monkeys= blocks.map(|block| block.parse()).collect::<Result<_,_>>()?;
-        let mut monkeys = Vec::new();
+        let mut monkeys: Vec<Monkey> = Vec::new();
 
         for block in blocks {
             monkeys.push(block.parse()?);
         }
 
-        Ok(MonkeyGame::new(monkeys))
+        // not strictly the LCM but _should_ do the trick
+    
+        let lcm = monkeys.iter().map(|monkey| monkey.get_prime_test()).reduce(|acc, x| num::integer::lcm(acc, x)).unwrap();
+        Ok(MonkeyGame::new(monkeys, lcm))
     }
 }
 #[cfg(test)]

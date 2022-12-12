@@ -4,12 +4,12 @@ use simple_error::SimpleError;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Operation {
     Square,
-    Add(i32),
-    Mul(i32)
+    Add(u64),
+    Mul(u64)
 }
 
 impl Operation {
-    pub fn apply(&self, old: &i32) -> i32 {
+    pub fn apply(&self, old: &u64) -> u64 {
         use Operation::*;
         match &self {
             Square => old * old,
@@ -27,10 +27,10 @@ impl FromStr for Operation {
         if s_trimmed == "Operation: new = old * old" {
             Ok(Operation::Square)
         } else if s_trimmed.starts_with("Operation: new = old + ") {
-            let num: i32 = s_trimmed[23..].parse()?;
+            let num: u64 = s_trimmed[23..].parse()?;
             Ok(Operation::Add(num))
         } else if s_trimmed.starts_with("Operation: new = old * ") {
-            let num: i32 = s_trimmed[23..].parse()?;
+            let num: u64 = s_trimmed[23..].parse()?;
             Ok(Operation::Mul(num))
         } else {
             Err(Box::new(SimpleError::new("Not a valid operation")))
@@ -44,9 +44,9 @@ mod tests {
     #[test]
     fn test_square() {
         let ops = vec![Operation::Square, Operation::Add(42), Operation::Mul(2)];
-        let expecteds: Vec<i32> = vec![9.into(), 45.into(), 6.into()];
+        let expecteds: Vec<u64> = vec![9.into(), 45.into(), 6.into()];
 
-        let x: i32 = 3.into();
+        let x: u64 = 3.into();
         for (op, expected) in ops.into_iter().zip(expecteds) {
             assert_eq!(op.apply(&x), expected);
         }

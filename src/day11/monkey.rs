@@ -13,36 +13,39 @@ pub struct Monkey {
     test: DivisibleTest,
     op: Operation,
 
-    items: Vec<i32>,
-    divisor: i32,
+    items: Vec<u64>,
+    divisor: u64,
 }
 
 impl Monkey {
-    pub fn new(items: Vec<i32>, op: Operation, test: DivisibleTest) -> Self {
+    pub fn new(items: Vec<u64>, op: Operation, test: DivisibleTest) -> Self {
         Monkey{items, op, test, divisor: 3}
     }
 
     pub fn take_turn(&mut self) -> Vec<MonkeyMove> {
         self.items.drain(..).map(|item| {
             let x = self.op.apply(&item) / self.divisor;
-            let x = self.test.get_reduced_x(x);
             let target_monkey = self.test.get_target_monkey_for(x);
             MonkeyMove{item: x, target_monkey}
         }).collect()
     }
 
-    pub fn receive_item(&mut self, item: i32) {
+    pub fn receive_item(&mut self, item: u64) {
         self.items.push(item);
     }
 
-    pub fn set_divisor(&mut self, divisor: i32) {
+    pub fn set_divisor(&mut self, divisor: u64) {
         self.divisor = divisor;
+    }
+
+    pub fn get_prime_test(&self) -> u64 {
+        self.test.get_divisor()
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MonkeyMove {
-    pub item: i32,
+    pub item: u64,
     pub target_monkey: usize
 }
 
@@ -61,11 +64,11 @@ impl FromStr for Monkey {
     }
 }
 
-fn parse_start_items(line: &str) -> Result<Vec<i32>, ParseIntError> {
+fn parse_start_items(line: &str) -> Result<Vec<u64>, ParseIntError> {
     let re = regex!(r"\d+");
     let matches = re.find_iter(line);
 
-    matches.map(|mat| mat.as_str().parse::<i32>()).collect()
+    matches.map(|mat| mat.as_str().parse::<u64>()).collect()
 }
 
 #[cfg(test)]
