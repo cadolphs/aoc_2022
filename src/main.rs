@@ -10,6 +10,7 @@ pub mod day08;
 pub mod day09;
 pub mod day10;
 pub mod day11;
+pub mod day12;
 
 use aocf::Aoc;
 use day01::run_day_01;
@@ -23,6 +24,7 @@ use day08::run_day_08;
 use day09::run_day_09;
 use day10::run_day_10;
 use day11::run_day_11;
+use day12::run_day_12;
 
 use std::env;
 use std::error::Error;
