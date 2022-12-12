@@ -1,3 +1,5 @@
+use lazy_regex::regex_captures;
+
 #[derive(Debug, Clone, Copy)]
 pub struct DivisibleTest {
     divisor: i32,
@@ -17,6 +19,16 @@ impl DivisibleTest {
             self.false_monkey
         }
     }
+
+    pub fn from_lines(lines: &[&str; 3]) -> Self {
+        let (test_line, true_line, false_line) = (lines[0], lines[1], lines[2]);
+
+        let divisor: i32 = regex_captures!(r"Test: divisible by (\d+)", test_line).unwrap().1.parse().unwrap();
+        let true_monkey: usize = regex_captures!(r"If true: throw to monkey (\d+)", true_line).unwrap().1.parse().unwrap();
+        let false_monkey: usize = regex_captures!(r"If false: throw to monkey (\d+)", false_line).unwrap().1.parse().unwrap();
+
+        DivisibleTest { divisor, true_monkey, false_monkey }
+    }
 }
 
 #[cfg(test)]
@@ -31,5 +43,14 @@ mod tests {
         for i in 1..=10 {
             assert_eq!(55, checker.get_target_monkey_for(14*11 + i));
         }
+    }
+
+    #[test]
+    fn test_from_lines() {
+        let lines = ["  Test: divisible by 23", "    If true: throw to monkey 2", "     If false: throw to monkey 3"];
+        let div_test = DivisibleTest::from_lines(&lines);
+
+        assert_eq!(2, div_test.get_target_monkey_for(46));
+        assert_eq!(3, div_test.get_target_monkey_for(47));
     }
 }
