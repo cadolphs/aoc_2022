@@ -1,13 +1,51 @@
-use std::{str::FromStr, error::Error};
 use json::parse;
+use std::{error::Error, str::FromStr};
 
 use itertools::Itertools;
 use simple_error::SimpleError;
 
-#[derive(Debug, PartialEq)]
+pub fn run_day_13(input: String) {
+    let blocks = input.split("\n\n");
+
+    let ans: i32 = blocks
+        .map(|block| {
+            let (packet1, packet2): (PacketData, PacketData) = block
+                .lines()
+                .map(|line| line.parse::<PacketData>().unwrap())
+                .collect_tuple()
+                .unwrap();
+            packet1 < packet2
+        })
+        .zip(1..)
+        .filter(|(right_order, _)| *right_order == true)
+        .map(|(_, index)| index)
+        .sum();
+
+    println!("Index sum for pairs in right order is {}", ans);
+
+    let mut all_packets: Vec<PacketData> = input.split("\n").filter(|line| line.len() > 0).map(|line| line.parse().unwrap()).collect();
+    let driver1: PacketData = "[[2]]".parse().unwrap();
+    let driver2: PacketData = "[[6]]".parse().unwrap();
+
+    all_packets.push(driver1.clone());
+    all_packets.push(driver2.clone());
+
+    all_packets.sort_unstable();
+
+    // now find the indices
+    let pos1 = all_packets.iter().position(|item| item == &driver1).unwrap() + 1;
+    let pos2 = all_packets.iter().position(|item| *item == driver2).unwrap() + 1;
+    let ans = pos1 * pos2;
+
+    println!("The decoder key is {}", ans);
+
+
+}
+
+#[derive(Debug, PartialEq, Eq, Ord, Clone)]
 enum PacketData {
     Num(i32),
-    List(Vec<PacketData>)
+    List(Vec<PacketData>),
 }
 
 impl From<Vec<i32>> for PacketData {
@@ -41,19 +79,22 @@ impl TryFrom<json::JsonValue> for PacketData {
         match value {
             Number(_) => Ok(PacketData::Num(value.as_i32().unwrap())),
             Array(items) => {
-                let pieces: Result<Vec<PacketData>, _> = items.into_iter().map(|item| item.try_into()).collect();
+                let pieces: Result<Vec<PacketData>, _> =
+                    items.into_iter().map(|item| item.try_into()).collect();
                 Ok(PacketData::List(pieces?))
             }
-            _ => Err(Box::new(SimpleError::new("Can only deal with numbers and lists!")))
+            _ => Err(Box::new(SimpleError::new(
+                "Can only deal with numbers and lists!",
+            ))),
         }
     }
 }
 
 impl PartialOrd for PacketData {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        use PacketData::*;
         use itertools::EitherOrBoth::{Both, Left, Right};
         use std::cmp::Ordering::*;
+        use PacketData::*;
         match (self, other) {
             (Num(x), Num(y)) => x.partial_cmp(y),
             (Num(x), List(_)) => List(vec![Num(*x)]).partial_cmp(other),
@@ -63,12 +104,16 @@ impl PartialOrd for PacketData {
                 for pair in pairs {
                     match pair {
                         Both(left, right) => {
-                            if left < right { return Some(Less) }
-                            else if right < left { return Some(Greater)}
-                            else { continue; }
-                        },
+                            if left < right {
+                                return Some(Less);
+                            } else if right < left {
+                                return Some(Greater);
+                            } else {
+                                continue;
+                            }
+                        }
                         Left(_) => return Some(Greater),
-                        Right(_) => return Some(Less)
+                        Right(_) => return Some(Less),
                     }
                 }
                 // List exhausted without one item smaller or greater, so they're the same
@@ -85,7 +130,6 @@ mod tests {
 
     #[test]
     fn test_simple_conversions() {
-        
         let data: PacketData = vec![1, 2, 3].into();
         let expected = List(vec![Num(1), Num(2), Num(3)]);
 
@@ -101,7 +145,7 @@ mod tests {
         // now do equal-length lists
         assert!(PacketData::from(vec![1, 2, 3]) < PacketData::from(vec![2, 2, 3]));
         assert!(PacketData::from(vec![1, 2, 3]) < PacketData::from(vec![1, 2, 4]));
-        
+
         // now do inequal-length lists
         assert!(PacketData::from(vec![1, 2, 3]) < PacketData::from(vec![1, 2, 3, 1]));
         assert!(PacketData::from(vec![1, 2, 3, 4]) > PacketData::from(vec![1, 2, 3]));
@@ -115,7 +159,7 @@ mod tests {
         assert!(lhs < rhs);
         // seems okay so far!
     }
- 
+
     #[test]
     fn test_parsing() {
         assert_eq!(Num(3), "3".parse().unwrap());
