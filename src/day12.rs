@@ -1,4 +1,4 @@
-use std::{cmp::Reverse, collections::{HashSet, HashMap}, thread::current};
+use std::{cmp::Reverse, collections::{HashSet, HashMap}};
 
 use itertools::Itertools;
 use priority_queue::PriorityQueue;
