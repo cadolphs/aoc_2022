@@ -13,19 +13,15 @@ pub struct Point {
     pub y: i32,
 }
 
-impl Point {
-    pub fn parse(input: &str) -> IResult<&str, Point> {
-        todo!()
-    }
-}
+pub type Path = Vec<Point>;
 
-fn paths(input: &str) -> IResult<&str, Vec<Vec<Point>>> {
+pub fn parse_paths(input: &str) -> IResult<&str, Vec<Path>> {
     separated_list1(tag("\n"), path)(input)
 }
 
-fn path(input: &str) -> IResult<&str, Vec<Point>> {
+fn path(input: &str) -> IResult<&str, Path> {
     let path_parser = separated_list1(tag(" -> "), pair);
-    verify(path_parser, |path: &Vec<Point>| path.len() > 1)(input)
+    verify(path_parser, |path: &Path| path.len() > 1)(input)
 }
 
 fn pair(input: &str) -> IResult<&str, Point> {
@@ -68,8 +64,11 @@ mod tests {
     #[test]
     fn it_parses_paths() {
         let input = "123,456 -> 789,123\n424,456 -> 152,123";
-        let expected = vec![vec![Point { x: 123, y: 456 }, Point { x: 789, y: 123 }], vec![Point{x: 424, y: 456}, Point{x:152, y: 123}]];
-        let (rest, res) = paths(input).unwrap();
+        let expected = vec![
+            vec![Point { x: 123, y: 456 }, Point { x: 789, y: 123 }],
+            vec![Point { x: 424, y: 456 }, Point { x: 152, y: 123 }],
+        ];
+        let (rest, res) = parse_paths(input).unwrap();
         assert_eq!(rest, "");
         assert_eq!(expected, res);
     }
