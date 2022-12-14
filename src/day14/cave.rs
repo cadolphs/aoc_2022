@@ -5,16 +5,16 @@ use super::lines::{Point, Path, get_points_on_segment};
 
 pub struct Cave {
     content: HashMap<Point, Square>,
-    sand_source: Point,
-    lowest_y: i32,
+    deepest_y: i32,
 }
 
 impl Cave {
-    pub fn from_paths(paths: Vec<Path>, sand_source: Point) -> Self {
+
+    pub fn from_paths(paths: Vec<Path>) -> Self {
         let mut content = HashMap::new();
         
-        let lowest_y = paths.iter().flatten()
-        .map(|p| p.y).min().unwrap();
+        let deepest_y = paths.iter().flatten()
+        .map(|p| p.y).max().unwrap();
 
         for path in paths {
             for (x, y) in path.into_iter().tuple_windows() {
@@ -24,7 +24,7 @@ impl Cave {
             }
         }
 
-        Cave{content, sand_source, lowest_y}
+        Cave{content, deepest_y}
     }
 
     pub fn square_at(&self, pos: &Point) -> Square {
@@ -33,7 +33,11 @@ impl Cave {
     }
 
     pub fn is_out_of_bounds(&self, pos: &Point) -> bool {
-        pos.y <= self.lowest_y
+        pos.y >= self.deepest_y
+    }
+
+    pub fn mark_sand(&mut self, pos: &Point) {
+        self.content.insert(*pos, Square::Sand);
     }
 
 }
@@ -63,7 +67,7 @@ mod tests {
         let path = vec![p1, p2];
         let paths = vec![path];
 
-        let cave = Cave::from_paths(paths, Point{x:5, y: 0});
+        let cave = Cave::from_paths(paths);
 
         use Square::*;
         for x in 0..=10 {
@@ -74,5 +78,8 @@ mod tests {
             let checkpoint = Point{x: x, y: 7};
             assert_eq!(cave.square_at(&checkpoint), Air);
         }
+
+        assert_eq!(cave.is_out_of_bounds(&Point{x: 42, y:5}), true);
+        assert_eq!(cave.is_out_of_bounds(&Point{x: 42, y:4}), false);
     }
 }
