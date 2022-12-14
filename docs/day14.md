@@ -13,3 +13,14 @@ do the trick.
 
 And then we just run a loop until we're finished. Could probably do something nicer with iterators but meh.
 Great: Got the right answer for the actual puzzle input on first try.
+
+For game 2, I can re-use lots of the logic before. Basically, writing a `Decorator` struct around the `Cave` 
+struct. Now `Cave` becomes `VoidCave`. A `CaveWithFloor` just wraps that. For the construction and all 
+other logic we delegate to `VoidCave`, with the exception that `is_out_of_bounds` always returns `false`, 
+and `get_square_at` first does an explicit check if we're on the floor (because we don't want to fill our 
+`HashMap` with infinitely many x positions, and we don't want to have to guess how many we need, either).
+
+Then we just extract the shared methods into a `Cave` trait and make the `Simulator` generic over that trait.
+
+In the end, I almost got the right answer. Was just off by one because the step where the sand blocks the source 
+counts as a step for the answer.

@@ -1,5 +1,5 @@
 use self::{
-    cave::{Cave, Square},
+    cave::{Cave, VoidCave, CaveWithFloor, Square},
     lines::Point,
 };
 
@@ -7,7 +7,7 @@ mod cave;
 mod lines;
 
 pub fn run_day_14(input: String) {
-    let cave = Cave::parse(&input);
+    let cave = VoidCave::parse(&input);
     let sand_source = Point{x: 500, y: 0};
 
     let mut sim = Simulator::new(cave, sand_source);
@@ -18,6 +18,18 @@ pub fn run_day_14(input: String) {
     }
 
     println!("There's {} units of sand produced until it flows out.", steps);
+
+    // Let's do it again
+    let cave = VoidCave::parse(&input);
+    let cave = CaveWithFloor::new(cave);
+
+    let mut sim = Simulator::new(cave, sand_source);
+    let mut steps = 0;
+    while sim.step() != SimulationStepResult::Finished {
+        steps += 1;
+    }
+
+    println!("There's {} units of sand produced until it blocks the source.", steps+1);
 }
 
 #[derive(Debug, PartialEq)]
@@ -26,14 +38,14 @@ pub enum SimulationStepResult {
     NotFinished,
 }
 
-struct Simulator {
-    cave: Cave,
+struct Simulator<C: Cave> {
+    cave: C,
     sand_path: Vec<Point>,
 }
 
-impl Simulator {
-    fn new(cave: Cave, sand_source: Point) -> Self {
-        Simulator {
+impl<C: Cave> Simulator<C> {
+    fn new(cave: C, sand_source: Point) -> Self {
+        Self {
             cave,
             sand_path: vec![sand_source],
         }
@@ -53,6 +65,9 @@ impl Simulator {
                 // couldn't find a next square from current starting pos
                 // that means we're coming to rest:
                 self.cave.mark_sand(&start);
+                if start == self.sand_path[0] {
+                    return SimulationStepResult::Finished;
+                }
                 // now we need to backtrack the path
                 self.sand_path.pop();
                 return SimulationStepResult::NotFinished
@@ -92,7 +107,7 @@ mod tests {
         let path = vec![p1, p2];
         let paths = vec![path];
 
-        let cave = Cave::from_paths(paths);
+        let cave = VoidCave::from_paths(paths);
 
         let mut sim = Simulator::new(cave, Point{x: 5, y:0});
 
