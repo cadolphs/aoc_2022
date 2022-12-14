@@ -6,8 +6,9 @@ use nom::{
     sequence::separated_pair,
     IResult,
 };
+use std::ops::RangeInclusive;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Point {
     pub x: i32,
     pub y: i32,
@@ -15,6 +16,29 @@ pub struct Point {
 
 pub type Path = Vec<Point>;
 
+pub fn get_points_on_segment(point1: Point, point2: Point) -> Vec<Point> {
+    let (x1, y1) = (point1.x, point1.y);
+    let (x2, y2) = (point2.x, point2.y);
+
+    if x1 == x2 {
+        either_way_range(y1, y2)
+            .map(|y| Point { x: x1, y })
+            .collect()
+    } else if y1 == y2 {
+        either_way_range(x1, x2).map(|x| Point { x, y: y1 }).collect()
+    } else {
+        panic!("Invalid input. Successive points aren't on the same line")
+    }
+}
+
+fn either_way_range(start: i32, end: i32) -> RangeInclusive<i32> {
+    let (start, end) = if start < end {
+        (start, end)
+    } else {
+        (end, start)
+    };
+    start..=end
+}
 pub fn parse_paths(input: &str) -> IResult<&str, Vec<Path>> {
     separated_list1(tag("\n"), path)(input)
 }
@@ -71,5 +95,18 @@ mod tests {
         let (rest, res) = parse_paths(input).unwrap();
         assert_eq!(rest, "");
         assert_eq!(expected, res);
+    }
+
+    #[test]
+    fn it_computes_points_on_segments() {
+        let p1 = Point { x: 0, y: 10 };
+        let p2 = Point { x: 0, y: 5 };
+
+        let points = get_points_on_segment(p1, p2);
+        assert_eq!(points.len(), 6);
+
+        assert_eq!(p2, points[0]);
+        assert_eq!(p1, points[5]);
+        assert_eq!(Point{x: 0, y: 6}, points[1]);
     }
 }
