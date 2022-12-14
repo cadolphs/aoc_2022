@@ -72,7 +72,7 @@ mod tests {
     use super::*;
     #[test]
     fn simple_simulation() {
-        let p1 = Point{x: 0, y: 5};
+        let p1 = Point{x: 3, y: 5};
         let p2 = Point{x: 10, y: 5};
 
         let path = vec![p1, p2];
@@ -96,5 +96,12 @@ mod tests {
 
         sim.step();
         assert_eq!(sim.cave.square_at(&Point{x: 5, y: 3}), Square::Sand);
+
+        // check if terminates
+        while sim.step() == SimulationStepResult::NotFinished {
+
+        }
+        assert!(true, "Found the end");
+        
     }
 }
