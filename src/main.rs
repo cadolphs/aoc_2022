@@ -28,6 +28,7 @@ use day10::run_day_10;
 use day11::run_day_11;
 use day12::run_day_12;
 use day13::run_day_13;
+use day14::run_day_14;
 
 use std::env;
 use std::error::Error;
@@ -99,6 +100,11 @@ fn main() {
 
     if let Ok(input) = get_aoc_input(year, 13, &session_cookie) {
         run_day_13(input);
+        print_separation();
+    }
+
+    if let Ok(input) = get_aoc_input(year, 14, &session_cookie) {
+        run_day_14(input);
         print_separation();
     }
 }

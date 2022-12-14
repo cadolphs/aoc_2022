@@ -6,6 +6,20 @@ use self::{
 mod cave;
 mod lines;
 
+pub fn run_day_14(input: String) {
+    let cave = Cave::parse(&input);
+    let sand_source = Point{x: 500, y: 0};
+
+    let mut sim = Simulator::new(cave, sand_source);
+
+    let mut steps = 0;
+    while sim.step() != SimulationStepResult::Finished {
+        steps += 1;
+    }
+
+    println!("There's {} units of sand produced until it flows out.", steps);
+}
+
 #[derive(Debug, PartialEq)]
 pub enum SimulationStepResult {
     Finished,
@@ -102,6 +116,6 @@ mod tests {
 
         }
         assert!(true, "Found the end");
-        
+
     }
 }

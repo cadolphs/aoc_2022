@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use itertools::Itertools;
 
-use super::lines::{Point, Path, get_points_on_segment};
+use super::lines::{Point, Path, get_points_on_segment, parse_paths};
 
 pub struct Cave {
     content: HashMap<Point, Square>,
@@ -9,6 +9,10 @@ pub struct Cave {
 }
 
 impl Cave {
+    pub fn parse(input: &str) -> Self {
+        let (_, paths) = parse_paths(input).unwrap();
+        Self::from_paths(paths)
+    }
 
     pub fn from_paths(paths: Vec<Path>) -> Self {
         let mut content = HashMap::new();
