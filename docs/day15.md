@@ -39,3 +39,6 @@ all rows (y-values). For each y-value, we compute the interval set at that locat
 to the allowed search range (x=0...40000000) or so. Then we can ask if the row is full, i.e., if 
 none of the positions can be beacons. When we finally find the row that has one free beacon, we can 
 look at the interval set and grab the "gap".
+
+So. Knowing that there's only one possible location, apparently some smart geometry can get us an 
+answer much faster! But that's okay. With optimization, the code runs super fast anyway.
