@@ -1,11 +1,39 @@
-mod parsing {}
+use std::collections::HashSet;
+
+use itertools::Itertools;
+
+use self::{themap::SensorBeaconPair, interval::IntervalSet};
+
+pub fn run_day_15(input: String) {
+
+    let (_, sbs) = SensorBeaconPair::parse_lines(&input).unwrap();
+    assert_eq!(sbs.len(), 23);
+    let y_pos = 2000000;
+
+    let mut intervals = IntervalSet::new();
+
+    for sb in &sbs {
+        if let Some(interval) = sb.get_y_intersect(y_pos) {
+            intervals.add(interval);
+        }
+    }
+
+    let beacons_on_the_line = sbs.iter().map(|sb| sb.beacon)
+    .filter(|beacon| beacon.1 == y_pos).unique().count();
+
+    let ans = intervals.len() - beacons_on_the_line;
+
+    println!("Not counting positions where there are beacons already, there are {} positions that cannot be beacons.", ans);
+}
 
 mod themap {
+    use nom::{IResult, bytes::complete::tag};
+
     use super::{vec2d::Vec2D, interval::Interval};
 
     pub struct SensorBeaconPair {
-        sensor: Vec2D,
-        beacon: Vec2D,
+        pub sensor: Vec2D,
+        pub beacon: Vec2D,
 
         size: i32
     }
@@ -28,6 +56,24 @@ mod themap {
                 Some(Interval::new(min_x, max_x))
             }
         }
+
+        pub fn parse_lines(input: &str) -> IResult<&str, Vec<SensorBeaconPair>> {
+            nom::multi::separated_list1(tag("\n"), Self::parse_line)(input)
+        }
+
+        pub fn parse_line(input: &str) -> IResult<&str, SensorBeaconPair> {
+            let (input, _) = tag("Sensor at x=")(input)?;
+            let (input, sensor_x) = nom::character::complete::i32(input)?;
+            let (input, _) = tag(", y=")(input)?;
+            let (input, sensor_y) = nom::character::complete::i32(input)?;
+            let (input, _) = tag(": closest beacon is at x=")(input)?;
+            let (input, beacon_x) = nom::character::complete::i32(input)?;
+            let (input, _) = tag(", y=")(input)?;
+            let (input, beacon_y) = nom::character::complete::i32(input)?;
+            
+            Ok((input, SensorBeaconPair::new(Vec2D(sensor_x, sensor_y), Vec2D(beacon_x, beacon_y))))
+        }
+
     }
 }
 

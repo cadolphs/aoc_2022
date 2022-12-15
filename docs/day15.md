@@ -24,3 +24,11 @@ that's probably too cumbersome. Instead, I should have an `Intervals` struct tha
 maintains a view of disjoint (and ordered) intervals.
 
 We'll TDD the adding of new intervals.
+
+With that in place, all we need to do is parse, query the pair for the intersection interval, 
+add them all in the interval set. 
+
+The final tricky part is to subtract those locations that are definitely a beacon as per the input, 
+and here we must realize that multiple sensors can be closest to the same beacon. So to count the 
+unqiue occurrences, I collect them into a `HashSet` and compute its lenght. Or, actually, I let 
+the itertools crate do that for me via the `unique()` function.
