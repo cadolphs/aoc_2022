@@ -19,3 +19,8 @@ Now all we need to do is compute all those intersections (simple math), and then
 _combine_ all those intersections to get the total amount of excluded squares on the 
 y-line.
 
+So. First we write an `Interval` struct. Then I wrote a `subtract` method. But really 
+that's probably too cumbersome. Instead, I should have an `Intervals` struct that 
+maintains a view of disjoint (and ordered) intervals.
+
+We'll TDD the adding of new intervals.
