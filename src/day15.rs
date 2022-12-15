@@ -1,6 +1,79 @@
+mod parsing {}
+
+mod themap {
+    use super::{vec2d::Vec2D, interval::Interval};
+
+    pub struct SensorBeaconPair {
+        sensor: Vec2D,
+        beacon: Vec2D,
+
+        size: i32
+    }
+
+    impl SensorBeaconPair {
+        pub fn new(sensor: Vec2D, beacon: Vec2D) -> Self {
+            let size = sensor.manhattan(&beacon);
+            SensorBeaconPair{sensor, beacon, size}
+        }
+
+        pub fn get_y_intersect(&self, y_pos: i32) -> Option<Interval> {
+            let y_dist = (y_pos - self.sensor.1).abs();
+            if y_dist > self.size {
+                None
+            } else {
+                //what is the intersect?
+                let left_over_for_x_dist = self.size - y_dist;
+                let min_x = self.sensor.0 - left_over_for_x_dist;
+                let max_x = self.sensor.0 + left_over_for_x_dist;
+                Some(Interval::new(min_x, max_x))
+            }
+        }
+    }
+}
+
+mod vec2d {
+    use std::ops::{Sub, Add};
+
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+    pub struct Vec2D(pub i32, pub i32);
+
+    impl Vec2D {
+        pub fn new() -> Self {
+            Self::default()
+        }
+
+        pub fn inf_norm(&self) -> i32 {
+            std::cmp::max(self.0.abs(), self.1.abs())
+        }
+
+        pub fn norm1(&self) -> i32 {
+            self.0.abs() + self.1.abs()
+        }
+
+        pub fn manhattan(&self, other: &Self) -> i32 {
+            (*self - *other).norm1()
+        }
+    }
+
+    impl Add<Vec2D> for Vec2D {
+        type Output = Vec2D;
+
+        fn add(self, rhs: Vec2D) -> Vec2D {
+            Vec2D(self.0 + rhs.0, self.1 + rhs.1)
+        }
+    }
+
+    impl Sub<Vec2D> for Vec2D {
+        type Output = Vec2D;
+
+        fn sub(self, rhs: Vec2D) -> Vec2D {
+            Vec2D(self.0 - rhs.0, self.1 - rhs.1)
+        }
+    }
+}
+
 mod interval {
     use itertools::Itertools;
-
 
     #[derive(Debug)]
     pub struct IntervalSet {
@@ -14,7 +87,10 @@ mod interval {
         }
 
         pub fn add(&mut self, interval: Interval) {
-            let intersector = self.intervals.iter().find_position(|i| interval.intersects_or_abuts(i));
+            let intersector = self
+                .intervals
+                .iter()
+                .find_position(|i| interval.intersects_or_abuts(i));
 
             if let Some((pos, other)) = intersector {
                 let new_interval = interval.combine(other);
@@ -23,6 +99,8 @@ mod interval {
             } else {
                 // new interval disjoint with all other intervals so we can just add it.
                 self.intervals.push(interval);
+                // maybe this makes live easier? sort intervals in "ascending" order?
+                self.intervals.sort_unstable_by_key(|interval| interval.0);
             }
         }
 
@@ -53,7 +131,7 @@ mod interval {
 
         pub fn combine(self, other: &Self) -> Self {
             assert!(self.intersects_or_abuts(other));
-            
+
             let x = std::cmp::min(self.0, other.0);
             let y = std::cmp::max(self.1, other.1);
 
@@ -85,7 +163,7 @@ mod interval {
 
 #[cfg(test)]
 mod tests {
-    use super::interval::*;
+    use super::{interval::*, vec2d::Vec2D, themap::SensorBeaconPair};
 
     #[test]
     fn test_interval_creation() {
@@ -148,5 +226,22 @@ mod tests {
 
         intervals.add(Interval::new(-5, 3));
         assert_eq!(intervals.len(), 17);
+    }
+
+    #[test]
+    fn test_y_intersect() {
+        let sensor = Vec2D(0, 5);
+        let beacon = Vec2D(0, 10);
+        
+        let sb = SensorBeaconPair::new(sensor, beacon);
+
+        let y_pos = -100;
+        assert_eq!(sb.get_y_intersect(y_pos), None);
+
+        let y_pos = 3;
+        //intersect points should be (-3, 3) all the way up to (3, 3)
+        
+        let interval = sb.get_y_intersect(y_pos);
+        assert_eq!(interval, Some(Interval::new(-3, 3)));
     }
 }
