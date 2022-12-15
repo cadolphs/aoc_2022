@@ -10,13 +10,7 @@ pub fn run_day_15(input: String) {
     assert_eq!(sbs.len(), 23);
     let y_pos = 2000000;
 
-    let mut intervals = IntervalSet::new();
-
-    for sb in &sbs {
-        if let Some(interval) = sb.get_y_intersect(y_pos) {
-            intervals.add(interval);
-        }
-    }
+    let intervals = get_intervals_for_y(&sbs, y_pos, false);
 
     let beacons_on_the_line = sbs.iter().map(|sb| sb.beacon)
     .filter(|beacon| beacon.1 == y_pos).unique().count();
@@ -24,6 +18,34 @@ pub fn run_day_15(input: String) {
     let ans = intervals.len() - beacons_on_the_line;
 
     println!("Not counting positions where there are beacons already, there are {} positions that cannot be beacons.", ans);
+
+    // part 2
+    for y_pos in 0..=4000000 {
+        let intervals = get_intervals_for_y(&sbs, y_pos, true);
+        if intervals.len() != 4000001 {
+            // found the y_position! now find x
+            let x_pos = intervals.gap();
+            let ans = (x_pos as u64) * 4000000 + y_pos as u64;
+            println!("Tuning frequency is {}", ans);
+            break;
+            
+        }
+    }
+}
+
+fn get_intervals_for_y(sbs: &Vec<SensorBeaconPair>, y_pos: i32, truncate: bool) -> IntervalSet {
+    let mut intervals = IntervalSet::new();
+
+    for sb in sbs {
+        if let Some(interval) = sb.get_y_intersect(y_pos) {
+            if !truncate {
+                intervals.add(interval);
+            } else {
+                intervals.add(interval.truncate(0, 4000000));
+            }
+        }
+    }
+    intervals
 }
 
 mod themap {
@@ -153,6 +175,14 @@ mod interval {
         pub fn len(&self) -> usize {
             self.intervals.iter().map(|i| i.len()).sum()
         }
+
+        pub fn gap(&self) -> i32 {
+            if self.intervals.len() == 2 {
+                self.intervals[0].1 + 1
+            } else {
+                todo!()
+            }
+        }
     }
 
     #[derive(Debug, Clone, Copy, PartialEq)]
@@ -203,6 +233,12 @@ mod interval {
             } else {
                 panic!("Seems like I missed some interval subtraction logic");
             }
+        }
+
+        pub fn truncate(self, x_min: i32, x_max: i32) -> Self {
+            let x_min = std::cmp::max(self.0, x_min);
+            let x_max = std::cmp::min(self.1, x_max);
+            Self::new(x_min, x_max)
         }
     }
 }

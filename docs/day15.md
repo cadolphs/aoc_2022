@@ -32,3 +32,10 @@ The final tricky part is to subtract those locations that are definitely a beaco
 and here we must realize that multiple sensors can be closest to the same beacon. So to count the 
 unqiue occurrences, I collect them into a `HashSet` and compute its lenght. Or, actually, I let 
 the itertools crate do that for me via the `unique()` function.
+
+On to part 2. Phew. I expected we'd need to do 2D shape matching. Shudder. Instead, the search space 
+doesn't seem too ridiculously large. How do we know where the beacon might be? Well. We iterate over 
+all rows (y-values). For each y-value, we compute the interval set at that location, but _truncated_ 
+to the allowed search range (x=0...40000000) or so. Then we can ask if the row is full, i.e., if 
+none of the positions can be beacons. When we finally find the row that has one free beacon, we can 
+look at the interval set and grab the "gap".
