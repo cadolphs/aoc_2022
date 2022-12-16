@@ -111,10 +111,10 @@ fn main() {
         print_separation();
     }
 
-    if let Ok(input) = get_aoc_input(year, 15, &session_cookie) {
-        run_day_15(input);
-        print_separation();
-    }
+    // if let Ok(input) = get_aoc_input(year, 15, &session_cookie) {
+    //     run_day_15(input);
+    //     print_separation();
+    // }
 }
 
 fn print_separation() {
