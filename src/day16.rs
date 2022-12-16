@@ -9,10 +9,9 @@ use nom::multi::separated_list1;
 use nom::IResult;
 use petgraph::adj::{Neighbors, NodeIndex};
 use petgraph::algo::floyd_warshall;
-use petgraph::graph::UnGraph;
+use petgraph::graph::Graph;
 
 struct ProblemGraph {
-    start_nodes: Vec<usize>,
     node_weights: Vec<u64>,
     dist_mat: Vec<Vec<i32>>,
 }
@@ -21,7 +20,7 @@ impl ProblemGraph {
     fn parse(input: &str) -> ProblemGraph {
         let (res, line_output) = separated_list1(tag("\n"), read_line)(input).unwrap();
 
-        let mut g: UnGraph<(u64), ()> = UnGraph::new_undirected();
+        let mut g: Graph<(u64), ()> = Graph::new();
 
         let mut node_ids: HashMap<String, _> = HashMap::new();
 
@@ -39,10 +38,10 @@ impl ProblemGraph {
         }
 
         let all_pairs_paths = floyd_warshall(&g, |_| 1).unwrap();
-
+        println!("{:?}", all_pairs_paths);
         let relevant_node_names: Vec<String> = line_output
             .iter()
-            .filter(|(_, weight, _)| *weight > 0)
+            .filter(|(name, weight, _)| name == "AA" || *weight > 0)
             .map(|(node, _, _)| node.clone())
             .collect();
 
@@ -56,13 +55,8 @@ impl ProblemGraph {
                 dist_mat[i].push(*all_pairs_paths.get(&(*idx_i, *idx_j)).unwrap());
             }
         }
-
-        let start_nodes = g.neighbors(*node_ids.get("AA").unwrap()).collect_vec();
-        let start_nodes = start_nodes.into_iter().map(|node_idx| relevant_node_idxs.iter().find_position(|idx| **idx == node_idx).unwrap())
-        .map(|(pos, item)| pos)
-        .collect_vec();
         
-        ProblemGraph { start_nodes, node_weights: weights, dist_mat }
+        ProblemGraph { node_weights: weights, dist_mat }
     }
 }
 
@@ -131,7 +125,11 @@ mod tests {
 
     #[test]
     fn test_graph_reading() {
-        let input = "Valve AA has flow rate=22; tunnels lead to valves BB, CC\nValve BB has flow rate=15; tunnel leads to valve AA";
+        let input = "Valve AA has flow rate=0; tunnels lead to valves BB, CC\nValve BB has flow rate=15; tunnel leads to valve AA\nValve CC has flow rate=12; tunnel leads to valve AA";
         let g = ProblemGraph::parse(input);
+
+        assert_eq!(g.node_weights, vec![0, 15, 12]);
+        assert_eq!(g.dist_mat, vec![vec![0, 1, 1], vec![1, 0, 2], vec![1, 2, 0]]);
+
     }
 }
