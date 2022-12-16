@@ -1,30 +1,30 @@
 use std::collections::HashMap;
 
-use nom::IResult;
-use nom::bytes::complete::tag;
-use nom::character::complete::{alpha1, u64, line_ending};
+use itertools::Itertools;
 use nom::branch::alt;
-use nom::combinator::{opt, map_res};
+use nom::bytes::complete::tag;
+use nom::character::complete::{alpha1, line_ending, u64};
+use nom::combinator::{map_res, opt};
 use nom::multi::separated_list1;
+use nom::IResult;
 use petgraph::adj::{Neighbors, NodeIndex};
 use petgraph::algo::floyd_warshall;
 use petgraph::graph::UnGraph;
 
 struct ProblemGraph {
-    start_nodes: Vec<u32>,
-    node_weights: Vec<usize>,
-    dist_mat: Vec<Vec<usize>>
+    start_nodes: Vec<usize>,
+    node_weights: Vec<u64>,
+    dist_mat: Vec<Vec<i32>>,
 }
 
 impl ProblemGraph {
-    
     fn parse(input: &str) -> ProblemGraph {
         let (res, line_output) = separated_list1(tag("\n"), read_line)(input).unwrap();
 
         let mut g: UnGraph<(u64), ()> = UnGraph::new_undirected();
 
         let mut node_ids: HashMap<String, _> = HashMap::new();
-        
+
         for (node, weight, _) in &line_output {
             let node_id = g.add_node(*weight);
             node_ids.insert(node.clone(), node_id);
@@ -38,11 +38,31 @@ impl ProblemGraph {
             }
         }
 
-        let all_pairs_paths = floyd_warshall(&g, |_| 1);
+        let all_pairs_paths = floyd_warshall(&g, |_| 1).unwrap();
+
+        let relevant_node_names: Vec<String> = line_output
+            .iter()
+            .filter(|(_, weight, _)| *weight > 0)
+            .map(|(node, _, _)| node.clone())
+            .collect();
+
+        let relevant_node_idxs = relevant_node_names.iter().map(|name| node_ids.get(name).unwrap()).cloned().collect_vec();
+        let mut weights = vec![];
+        let mut dist_mat = vec![];
+        for (i, idx_i) in relevant_node_idxs.iter().enumerate() {
+            weights.push(*g.node_weight(*idx_i).unwrap());
+            dist_mat.push(vec![]);
+            for (j, idx_j) in relevant_node_idxs.iter().enumerate() {
+                dist_mat[i].push(*all_pairs_paths.get(&(*idx_i, *idx_j)).unwrap());
+            }
+        }
+
+        let start_nodes = g.neighbors(*node_ids.get("AA").unwrap()).collect_vec();
+        let start_nodes = start_nodes.into_iter().map(|node_idx| relevant_node_idxs.iter().find_position(|idx| **idx == node_idx).unwrap())
+        .map(|(pos, item)| pos)
+        .collect_vec();
         
-        
-        todo!()
-        
+        ProblemGraph { start_nodes, node_weights: weights, dist_mat }
     }
 }
 
@@ -71,7 +91,7 @@ fn read_flow_rate(input: &str) -> IResult<&str, u64> {
 fn read_tunnel_or_tunnels(input: &str) -> IResult<&str, &str> {
     let read_tunnel = tag("; tunnel leads ");
     let read_tunnels = tag("; tunnels lead ");
-    
+
     let (input, _) = alt((read_tunnel, read_tunnels))(input)?;
     let (input, _) = tag("to valve")(input)?;
     let (input, _) = opt(tag("s"))(input)?;
@@ -85,7 +105,7 @@ fn read_tunnel_list(input: &str) -> IResult<&str, Vec<String>> {
 
     Ok((input, valves))
 }
- 
+
 #[cfg(test)]
 mod tests {
     use super::*;
