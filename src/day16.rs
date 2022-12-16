@@ -6,26 +6,43 @@ use nom::character::complete::{alpha1, u64, line_ending};
 use nom::branch::alt;
 use nom::combinator::{opt, map_res};
 use nom::multi::separated_list1;
+use petgraph::adj::{Neighbors, NodeIndex};
+use petgraph::algo::floyd_warshall;
 use petgraph::graph::UnGraph;
 
-struct InputGraph {
-    g: UnGraph<u64, ()>
+struct ProblemGraph {
+    start_nodes: Vec<u32>,
+    node_weights: Vec<usize>,
+    dist_mat: Vec<Vec<usize>>
 }
 
-impl InputGraph {
-    fn new(graph: UnGraph<String, ()>) -> Self {
-        InputGraph { g: graph }
-    }
-
-    fn parse(input: &str) -> InputGraph {
+impl ProblemGraph {
+    
+    fn parse(input: &str) -> ProblemGraph {
         let (res, line_output) = separated_list1(tag("\n"), read_line)(input).unwrap();
 
-        let g: UnGraph<String, ()> = UnGraph::new_undirected();
+        let mut g: UnGraph<(u64), ()> = UnGraph::new_undirected();
 
-        for (node, flow_rate, neighbors) in &line_output {
-            g.add_node(weight)
+        let mut node_ids: HashMap<String, _> = HashMap::new();
+        
+        for (node, weight, _) in &line_output {
+            let node_id = g.add_node(*weight);
+            node_ids.insert(node.clone(), node_id);
         }
-        graph
+
+        for (node, _, neighbors) in &line_output {
+            let node_id = node_ids.get(node).unwrap();
+            for neighbor in neighbors {
+                let neighbor_id = node_ids.get(neighbor).unwrap();
+                g.update_edge(*node_id, *neighbor_id, ());
+            }
+        }
+
+        let all_pairs_paths = floyd_warshall(&g, |_| 1);
+        
+        
+        todo!()
+        
     }
 }
 
@@ -95,6 +112,6 @@ mod tests {
     #[test]
     fn test_graph_reading() {
         let input = "Valve AA has flow rate=22; tunnels lead to valves BB, CC\nValve BB has flow rate=15; tunnel leads to valve AA";
-        let g = InputGraph::parse(input);
+        let g = ProblemGraph::parse(input);
     }
 }
