@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use itertools::Itertools;
 
 use self::{themap::SensorBeaconPair, interval::IntervalSet};
@@ -106,14 +104,6 @@ mod vec2d {
     pub struct Vec2D(pub i32, pub i32);
 
     impl Vec2D {
-        pub fn new() -> Self {
-            Self::default()
-        }
-
-        pub fn inf_norm(&self) -> i32 {
-            std::cmp::max(self.0.abs(), self.1.abs())
-        }
-
         pub fn norm1(&self) -> i32 {
             self.0.abs() + self.1.abs()
         }
@@ -214,27 +204,6 @@ mod interval {
             Interval::new(x, y)
         }
 
-        pub fn subtract(self, other: &Interval) -> Vec<Self> {
-            if self.0 > other.1 || self.1 < other.0 {
-                // disjoint intervals
-                vec![self]
-            // at this point we know self.0 <= other.1 && self.1 >= other.0
-            } else if self.0 >= other.0 && self.1 <= other.1 {
-                // contained interval
-                vec![]
-            // at this point we also know self.0 < other.0 || self.1 > other.1
-            } else if self.0 < other.0 && self.1 > other.1 {
-                // self contains other with no boundary overlap
-                vec![Interval(self.0, other.0 - 1), Interval(other.1 + 1, self.1)]
-            } else if self.0 < other.0 && self.1 <= other.1 {
-                vec![Interval(self.0, other.0 - 1)]
-            } else if self.0 >= other.0 && self.1 > other.1 {
-                vec![Interval(other.1 + 1, self.1)]
-            } else {
-                panic!("Seems like I missed some interval subtraction logic");
-            }
-        }
-
         pub fn truncate(self, x_min: i32, x_max: i32) -> Self {
             let x_min = std::cmp::max(self.0, x_min);
             let x_max = std::cmp::min(self.1, x_max);
@@ -250,34 +219,6 @@ mod tests {
     #[test]
     fn test_interval_creation() {
         assert_eq!(Interval::new(1, 2), Interval::new(2, 1));
-    }
-
-    #[test]
-    fn test_interval_subtraction() {
-        let base = Interval::new(0, 10);
-
-        let subs = vec![
-            Interval::new(42, 55),
-            Interval::new(2, 8),
-            Interval::new(-2, 13),
-            Interval::new(0, 5),
-            Interval::new(5, 10),
-            Interval::new(-2, 4),
-            Interval::new(8, 12),
-        ];
-        let expecteds = vec![
-            vec![Interval::new(0, 10)],
-            vec![Interval::new(0, 1), Interval::new(9, 10)],
-            vec![],
-            vec![Interval::new(6, 10)],
-            vec![Interval::new(0, 4)],
-            vec![Interval::new(5, 10)],
-            vec![Interval::new(0, 7)],
-        ];
-
-        for (sub, expected) in subs.into_iter().zip(expecteds) {
-            assert_eq!(expected, base.subtract(&sub))
-        }
     }
 
     #[test]

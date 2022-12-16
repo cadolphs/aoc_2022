@@ -3,14 +3,18 @@ use std::collections::HashMap;
 use itertools::Itertools;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::character::complete::{alpha1, line_ending, u64};
-use nom::combinator::{map_res, opt};
+use nom::character::complete::{alpha1, u64};
+use nom::combinator::opt;
 use nom::multi::separated_list1;
 use nom::IResult;
-use petgraph::adj::{Neighbors, NodeIndex};
 use petgraph::algo::floyd_warshall;
 use petgraph::graph::Graph;
 
+pub fn run_day_16(input: String) {
+    let g = ProblemGraph::parse(&input);
+
+    println!("There are {} relevant nodes", g.node_weights.len());
+}
 struct ProblemGraph {
     node_weights: Vec<u64>,
     dist_mat: Vec<Vec<i32>>,
@@ -38,7 +42,7 @@ impl ProblemGraph {
         }
 
         let all_pairs_paths = floyd_warshall(&g, |_| 1).unwrap();
-        println!("{:?}", all_pairs_paths);
+
         let relevant_node_names: Vec<String> = line_output
             .iter()
             .filter(|(name, weight, _)| name == "AA" || *weight > 0)
@@ -51,7 +55,7 @@ impl ProblemGraph {
         for (i, idx_i) in relevant_node_idxs.iter().enumerate() {
             weights.push(*g.node_weight(*idx_i).unwrap());
             dist_mat.push(vec![]);
-            for (j, idx_j) in relevant_node_idxs.iter().enumerate() {
+            for (_j, idx_j) in relevant_node_idxs.iter().enumerate() {
                 dist_mat[i].push(*all_pairs_paths.get(&(*idx_i, *idx_j)).unwrap());
             }
         }
@@ -117,7 +121,7 @@ mod tests {
         assert_eq!(input, "");
 
         let input = "Valve AA has flow rate=22; tunnels lead to valves BB, CC\nSome more stuff";
-        let (input, output) = read_line(input).unwrap();
+        let (_, output) = read_line(input).unwrap();
         assert_eq!(output.0, "AA");
         assert_eq!(output.1, 22);
         assert_eq!(output.2, vec!["BB".to_string(), "CC".to_string()]);
