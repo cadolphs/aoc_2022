@@ -20,3 +20,12 @@ And I think with that, we can do some nice backtracking with early stopping. We 
 
 Okay. Giving up on this one :) The "all-pairs shortest distance" idea is right on, and then we can use dynamic programming 
 where the recursive argument is a _bitmap_.
+
+And back! It doesn't leave me alone :) Got the shortest distance graph going. Now the dynamic programming. There's one 
+thing I'm wondering. We can either do the full dynamic programming recursion for each branch all the way down. Or we can 
+do a _quick and dirty_ estimate of the _best possible_ value a given branch could yield. And if that upper bound is lower 
+than what we _currently_ have for the branch, we don't even need to bother! It's a short-cut heuristic. For that to 
+do well, we probably want to use some sort of greedy heuristic.
+
+Woah. I did it! Part 1 solved correctly. Wasn't even _so_ bad in the end.
+

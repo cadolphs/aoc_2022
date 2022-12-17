@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
+use bit_set::BitSet;
 use itertools::Itertools;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::character::complete::{alpha1, u64};
+use nom::character::complete::{alpha1, i32};
 use nom::combinator::opt;
 use nom::multi::separated_list1;
 use nom::IResult;
@@ -14,17 +15,25 @@ pub fn run_day_16(input: String) {
     let g = ProblemGraph::parse(&input);
 
     println!("There are {} relevant nodes", g.node_weights.len());
+
+    let ans = g.solve();
+
+    println!("Best steam release is {}", ans);
 }
+#[derive(Clone)]
 struct ProblemGraph {
-    node_weights: Vec<u64>,
+    node_weights: Vec<i32>,
     dist_mat: Vec<Vec<i32>>,
+    start_node: usize,
 }
+
+type MemoMap = HashMap<(usize, i32, BitSet), i32>;
 
 impl ProblemGraph {
     fn parse(input: &str) -> ProblemGraph {
         let (res, line_output) = separated_list1(tag("\n"), read_line)(input).unwrap();
 
-        let mut g: Graph<(u64), ()> = Graph::new();
+        let mut g: Graph<(i32), ()> = Graph::new();
 
         let mut node_ids: HashMap<String, _> = HashMap::new();
 
@@ -49,7 +58,11 @@ impl ProblemGraph {
             .map(|(node, _, _)| node.clone())
             .collect();
 
-        let relevant_node_idxs = relevant_node_names.iter().map(|name| node_ids.get(name).unwrap()).cloned().collect_vec();
+        let relevant_node_idxs = relevant_node_names
+            .iter()
+            .map(|name| node_ids.get(name).unwrap())
+            .cloned()
+            .collect_vec();
         let mut weights = vec![];
         let mut dist_mat = vec![];
         for (i, idx_i) in relevant_node_idxs.iter().enumerate() {
@@ -59,12 +72,80 @@ impl ProblemGraph {
                 dist_mat[i].push(*all_pairs_paths.get(&(*idx_i, *idx_j)).unwrap());
             }
         }
+
+        // the start node is the one with 0 flow. All others have been removed!
+        let start_node = weights
+            .iter()
+            .find_position(|weight| **weight == 0)
+            .unwrap()
+            .0;
+
+        ProblemGraph {
+            node_weights: weights,
+            dist_mat,
+            start_node,
+        }
+    }
+
+    fn solve(&self) -> i32 {
+        let mut memo: MemoMap = HashMap::new();
+        let mut available_nodes: BitSet = BitSet::with_capacity(self.node_weights.len());
+        for (node, weight) in self.node_weights.iter().enumerate() {
+            if *weight > 0 {
+                available_nodes.insert(node);
+            }
+        }
+        assert_eq!(available_nodes.len(), 15);
+        let time = 30;
+
+        self.find_max(&mut memo, self.start_node, time, available_nodes)
+    }
+
+    fn find_max(
+        &self,
+        memo: &mut MemoMap,
+        node: usize,
+        time: i32,
+        available_nodes: BitSet,
+    ) -> i32 {
+        if time <= 2 {
+            // not enough time to _go_ to a valve _and_ open it _and_ benefit from it
+            return 0;
+        }
+        // now try memo
+        let key = (node, time, available_nodes.clone());
+        if let Some(val) = memo.get(&key) {
+            return *val;
+        }
+
+        // find all nodes we _could_ get to and active and have time to spare
+        let max_dist = time - 2;
+        let candidates = available_nodes
+            .iter()
+            .filter(|&n| self.dist_mat[node][n] <= max_dist);
         
-        ProblemGraph { node_weights: weights, dist_mat }
+        // first without branch test just to get it right
+        let best = candidates
+            .map(|n| {
+                let mut new_available_nodes = available_nodes.clone();
+                new_available_nodes.remove(n);
+                let time_left = time - 1 - self.dist_mat[node][n];
+                self.node_weights[n] * time_left + self.find_max(
+                    memo,
+                    n,
+                    time_left,
+                    new_available_nodes,
+                )
+            })
+            .max()
+            .unwrap_or(0);
+        memo.insert(key, best);
+        best
     }
 }
 
-type LineOutput = (String, u64, Vec<String>);
+
+type LineOutput = (String, i32, Vec<String>);
 
 fn read_line(input: &str) -> IResult<&str, LineOutput> {
     let (input, valve) = read_valve(input)?;
@@ -81,9 +162,9 @@ fn read_valve(input: &str) -> IResult<&str, String> {
     Ok((input, valve.to_string()))
 }
 
-fn read_flow_rate(input: &str) -> IResult<&str, u64> {
+fn read_flow_rate(input: &str) -> IResult<&str, i32> {
     let (input, _) = tag(" has flow rate=")(input)?;
-    u64(input)
+    i32(input)
 }
 
 fn read_tunnel_or_tunnels(input: &str) -> IResult<&str, &str> {
@@ -133,7 +214,11 @@ mod tests {
         let g = ProblemGraph::parse(input);
 
         assert_eq!(g.node_weights, vec![0, 15, 12]);
-        assert_eq!(g.dist_mat, vec![vec![0, 1, 1], vec![1, 0, 2], vec![1, 2, 0]]);
+        assert_eq!(
+            g.dist_mat,
+            vec![vec![0, 1, 1], vec![1, 0, 2], vec![1, 2, 0]]
+        );
 
+        assert_eq!(g.start_node, 0); // not actually sure if that's stable
     }
 }
