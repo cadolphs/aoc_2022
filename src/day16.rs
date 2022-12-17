@@ -19,6 +19,10 @@ pub fn run_day_16(input: String) {
     let ans = g.solve();
 
     println!("Best steam release is {}", ans);
+
+    let ans2 = g.solve2();
+
+    println!("Best answer with elephant is {}", ans2);
 }
 #[derive(Clone)]
 struct ProblemGraph {
@@ -28,6 +32,8 @@ struct ProblemGraph {
 }
 
 type MemoMap = HashMap<(usize, i32, BitSet), i32>;
+
+type MemoMap2 = HashMap<(usize, usize, i32, BitSet), i32>;
 
 impl ProblemGraph {
     fn parse(input: &str) -> ProblemGraph {
@@ -101,13 +107,36 @@ impl ProblemGraph {
         self.find_max(&mut memo, self.start_node, time, available_nodes)
     }
 
-    fn find_max(
-        &self,
-        memo: &mut MemoMap,
-        node: usize,
-        time: i32,
-        available_nodes: BitSet,
-    ) -> i32 {
+    fn solve2(&self) -> i32 {
+        let mut available_nodes: BitSet = BitSet::with_capacity(self.node_weights.len());
+        for (node, weight) in self.node_weights.iter().enumerate() {
+            if *weight > 0 {
+                available_nodes.insert(node);
+            }
+        }
+
+        let mut best_overall = 0;
+        for el_subset_len in 1..(available_nodes.len()/2) {
+            for el_items in available_nodes.iter().combinations(el_subset_len) {
+                let mut el_nodes = BitSet::from_iter(el_items);
+                let mut my_nodes: BitSet<u32> = BitSet::from_iter(available_nodes.difference(&el_nodes));
+
+                let mut el_memo = HashMap::new();
+                let mut my_memo = HashMap::new();
+                
+                let best_elephant = self.find_max(&mut el_memo, self.start_node, 26, el_nodes);
+                let best_human = self.find_max(&mut my_memo, self.start_node, 26, my_nodes);
+
+                let best = best_human + best_elephant;
+                best_overall = std::cmp::max(best, best_overall);
+            }
+        }
+
+        best_overall
+    }
+
+
+    fn find_max(&self, memo: &mut MemoMap, node: usize, time: i32, available_nodes: BitSet) -> i32 {
         if time <= 2 {
             // not enough time to _go_ to a valve _and_ open it _and_ benefit from it
             return 0;
@@ -123,19 +152,15 @@ impl ProblemGraph {
         let candidates = available_nodes
             .iter()
             .filter(|&n| self.dist_mat[node][n] <= max_dist);
-        
+
         // first without branch test just to get it right
         let best = candidates
             .map(|n| {
                 let mut new_available_nodes = available_nodes.clone();
                 new_available_nodes.remove(n);
                 let time_left = time - 1 - self.dist_mat[node][n];
-                self.node_weights[n] * time_left + self.find_max(
-                    memo,
-                    n,
-                    time_left,
-                    new_available_nodes,
-                )
+                self.node_weights[n] * time_left
+                    + self.find_max(memo, n, time_left, new_available_nodes)
             })
             .max()
             .unwrap_or(0);
@@ -143,7 +168,6 @@ impl ProblemGraph {
         best
     }
 }
-
 
 type LineOutput = (String, i32, Vec<String>);
 
