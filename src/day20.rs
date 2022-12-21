@@ -4,90 +4,106 @@ use itertools::Itertools;
 
 pub fn run_day_20(input: String) {
     
-    let numbers: Vec<i32> = input.lines().map(|l| l.parse().unwrap()).collect();
+    let numbers: Vec<i64> = input.lines().map(|l| l.parse().unwrap()).collect();
     //let numbers = vec![1, 2, -3, 3, -2, 0, 4];
 
-    let tagged_numbers: Vec<TaggedNumber> = numbers.into_iter()
+    let mut tagged_numbers: Vec<TaggedNumber> = numbers.into_iter()
         .enumerate()
         .map(|x| x.into())
         .collect();
 
-    let mut tagged_numbers: CircularVec<TaggedNumber> = tagged_numbers.into();
-    let n = tagged_numbers.size;
+    let mut tagged_numbers_1: CircularVec = tagged_numbers.clone().into();
+    
+    tagged_numbers_1.mix_once();
 
-    for pos in 0..n {
-        let (pos_to_shuffle, item_to_shuffle) = tagged_numbers.storage.iter().find_position(|tn| tn.original_pos == pos).unwrap();
-        let times_to_swap = best_times_to_swap(item_to_shuffle.val, n);
-        
-        let mut j = pos_to_shuffle as i32;
-        if times_to_swap > 0 {
-            for _ in 0..times_to_swap {
-                tagged_numbers.swap(j, j + 1);
-                j += 1;
-            }
-        } else if times_to_swap < 0 {
-            for _ in 0..times_to_swap.abs() {
-                tagged_numbers.swap(j, j-1);
-                j -= 1;
-            }
-        }
+    let zero_pos = tagged_numbers_1.storage.iter().find_position(|el| el.val == 0).unwrap().0;
+    let ans: i64 = [1000, 2000, 3000].map(|idx| zero_pos as i64 + idx).map(|idx| tagged_numbers_1[idx].val).into_iter().sum();
+
+    println!("The answer is {}", ans);
+
+    tagged_numbers.iter_mut().for_each(|x| x.val *= 811589153);
+    let mut tagged_numbers_2: CircularVec = tagged_numbers.into();
+    for _ in 0..10 {
+        tagged_numbers_2.mix_once();
     }
-
-    let zero_pos = tagged_numbers.storage.iter().find_position(|el| el.val == 0).unwrap().0;
-    let ans: i32 = [1000, 2000, 3000].map(|idx| zero_pos as i32 + idx).map(|idx| tagged_numbers[idx].val).into_iter().sum();
+    let zero_pos = tagged_numbers_2.storage.iter().find_position(|el| el.val == 0).unwrap().0;
+    let ans: i64 = [1000, 2000, 3000].map(|idx| zero_pos as i64 + idx).map(|idx| tagged_numbers_2[idx].val).into_iter().sum();
 
     println!("The answer is {}", ans);
 
 }
 
-fn best_times_to_swap(val: i32, n: usize) -> i32 {
-    let pos_times = val.rem_euclid(n as i32 - 1);
-    let neg_times = pos_times - (n as i32 -1);
-
-    if pos_times > neg_times.abs() {
-        neg_times
-    } else {
-        pos_times
-    }
-}
-
 #[derive(PartialEq, Clone, Copy)]
 struct TaggedNumber {
-    val: i32,
+    val: i64,
     original_pos: usize,
 }
 
-impl From<(usize, i32)> for TaggedNumber {
-    fn from((original_pos, val): (usize, i32)) -> Self {
+impl From<(usize, i64)> for TaggedNumber {
+    fn from((original_pos, val): (usize, i64)) -> Self {
         Self { original_pos, val }
     }
 }
 
-struct CircularVec<T> {
-    storage: Vec<T>,
+#[derive(Clone)]
+struct CircularVec {
+    storage: Vec<TaggedNumber>,
     size: usize,
 }
 
-impl<T> From<Vec<T>> for CircularVec<T> {
-    fn from(v: Vec<T>) -> Self {
+impl From<Vec<TaggedNumber>> for CircularVec {
+    fn from(v: Vec<TaggedNumber>) -> Self {
         let size = v.len();
         CircularVec { storage: v, size }
     }
 }
 
-impl<T> CircularVec<T> {
-    fn swap(&mut self, i: i32, j: i32) {
-        let i: usize = i.rem_euclid(self.size as i32) as usize;
-        let j: usize = j.rem_euclid(self.size as i32) as usize;
+impl CircularVec {
+    fn swap(&mut self, i: i64, j: i64) {
+        let i: usize = i.rem_euclid(self.size as i64) as usize;
+        let j: usize = j.rem_euclid(self.size as i64) as usize;
         self.storage.swap(i, j);
+    }
+
+    fn best_times_to_swap(&self, val: i64) -> i64 {
+        let mod_offset = self.size as i64 - 1;
+        let pos_times = val.rem_euclid(mod_offset);
+        let neg_times = pos_times - (mod_offset);
+    
+        if pos_times > neg_times.abs() {
+            neg_times
+        } else {
+            pos_times
+        }
+    }
+
+    fn mix_once(&mut self) {
+        let n = self.size;
+        for pos in 0..n {
+            let (pos_to_shuffle, item_to_shuffle) = self.storage.iter().find_position(|tn| tn.original_pos == pos).unwrap();
+            let times_to_swap = self.best_times_to_swap(item_to_shuffle.val);
+
+            let mut j = pos_to_shuffle as i64;
+            if times_to_swap > 0 {
+                for _ in 0..times_to_swap {
+                    self.swap(j, j + 1);
+                    j += 1;
+                }
+            } else if times_to_swap < 0 {
+                for _ in 0..times_to_swap.abs() {
+                    self.swap(j, j-1);
+                    j -= 1;
+                }
+            }
+        }
     }
 }
 
-impl<T> Index<i32> for CircularVec<T> {
-    type Output = T;
+impl Index<i64> for CircularVec {
+    type Output = TaggedNumber;
 
-    fn index(&self, index: i32) -> &Self::Output {
-        let index: usize = index.rem_euclid(self.size as i32) as usize;
+    fn index(&self, index: i64) -> &Self::Output {
+        let index: usize = index.rem_euclid(self.size as i64) as usize;
         &self.storage[index]
     }
 }
